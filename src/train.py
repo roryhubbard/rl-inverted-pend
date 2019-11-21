@@ -12,11 +12,11 @@ def main():
         for _ in range(500):
             env.render()
             # next two lines should be commented out to do the 'switcheroo'
-            #u = np.array([0]).astype(env.action_space.dtype)
-            #info = env.step(u)
+            u = np.array([0.1]).astype(env.action_space.dtype)
+            info = env.step(u)
 
             # the next line should be commented out to do the 'switcheroo'
-            info = env.step(env.action_space.sample())
+            # info = env.step(env.action_space.sample())
             print(info)
 
             time.sleep(.04)

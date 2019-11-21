@@ -13,11 +13,13 @@ class PendulumEnv(gym.Env):
     }
 
     def __init__(self, g=10.0):
-        self.max_speed=8
-        self.max_torque=500.
-        self.dt=.05
+        self.max_speed = 8
+        self.max_torque = 500.
+        self.dt = .05
         self.g = g
-        self.m = 1.
+
+        self.m_pend = 1.
+        self.m_wheel = 1.
         self.l = 3
 
         self.flywheel_diameter = 1.7
@@ -43,7 +45,8 @@ class PendulumEnv(gym.Env):
         th, thdot = self.state # th := theta
 
         g = self.g
-        m = self.m
+        m_pend = self.m_pend
+        m_wheel = self.m_wheel
         l = self.l
         dt = self.dt
 
@@ -51,7 +54,11 @@ class PendulumEnv(gym.Env):
         self.last_u = u # for rendering
         costs = angle_normalize(th)**2 + .1*thdot**2 + .001*(u**2)
 
-        newthdot = thdot + (-3*g/(2*l) * np.sin(th + np.pi) + 3./(m*l**2)*u) * dt
+        # m = 1.
+        # newthdot = thdot + (-3*g/(2*l) * np.sin(th + np.pi) + 3./(m*l**2)*u) * dt
+        num = -(m_pend*l/2 + m_wheel*l) * g * np.sin(th + np.pi) - u
+        den = (m_pend*l**2)/3 + m_wheel*l**2
+        newthdot = thdot + (num / den) * dt
         newth = th + newthdot*dt
         newthdot = np.clip(newthdot, -self.max_speed, self.max_speed) #pylint: disable=E1111
         newth = np.clip(newth, -self.angle_limit, self.angle_limit)
@@ -73,7 +80,7 @@ class PendulumEnv(gym.Env):
     def reset(self):
         high = np.array([np.pi/2, 1])
         self.state = self.np_random.uniform(low=-high, high=high)
-        #self.state = [0, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
+        self.state = [0, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
         self.last_u = None
         return self._get_obs()
 
@@ -84,8 +91,6 @@ class PendulumEnv(gym.Env):
     def render(self, mode='human'):
         l = self.l
         if self.viewer is None:
-            #from gym.envs.classic_control import rendering
-            # import rendering
             self.viewer = rendering.Viewer(720,720)
             self.viewer.set_bounds(-5,5,-5,5)
 
