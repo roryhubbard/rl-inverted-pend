@@ -59,6 +59,7 @@ class PendulumEnv(gym.Env):
         num = -(m_pend*l/2 + m_wheel*l) * g * np.sin(th + np.pi) - u
         den = (m_pend*l**2)/3 + m_wheel*l**2
         newthdot = thdot + (num / den) * dt
+        
         newth = th + newthdot*dt
         newthdot = np.clip(newthdot, -self.max_speed, self.max_speed) #pylint: disable=E1111
         newth = np.clip(newth, -self.angle_limit, self.angle_limit)
