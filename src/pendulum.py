@@ -52,7 +52,8 @@ class PendulumEnv(gym.Env):
 
         u = np.clip(u, -self.max_torque, self.max_torque)[0]
         self.last_u = u # for rendering
-        costs = angle_normalize(th)**2 + .1*thdot**2 + .001*(u**2)
+        #costs = angle_normalize(th)**2 + .1*thdot**2 + .001*(u**2)
+        costs = th ** 2 + .001*thdot**2
 
         # m = 1.
         # newthdot = thdot + (-3*g/(2*l) * np.sin(th + np.pi) + 3./(m*l**2)*u) * dt
@@ -72,7 +73,7 @@ class PendulumEnv(gym.Env):
         self.flywheel_ang_vel = np.clip(self.flywheel_ang_vel, -self.flywheel_max_ang_vel, self.flywheel_max_ang_vel)
         newAng = self.flywheel_ang + self.flywheel_ang_vel * dt + 0.5*newAngAcc*dt**2
         newAngAcc = np.clip(newAngAcc,-self.flywheel_max_ang_vel, self.flywheel_max_ang_vel)
-        print("new_Vel = ",self.flywheel_ang_vel)
+        #print("new_Vel = ",self.flywheel_ang_vel)
 
         self.rotation_add = self.rotation_add + newAng #self.rotation_add + np.pi/10
 
@@ -81,13 +82,14 @@ class PendulumEnv(gym.Env):
     def reset(self):
         high = np.array([np.pi/2, 1])
         self.state = self.np_random.uniform(low=-high, high=high)
-        self.state = [0, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
+        self.state = [self.angle_limit, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
         self.last_u = None
         return self._get_obs()
 
     def _get_obs(self):
         theta, thetadot = self.state
-        return np.array([np.cos(theta), np.sin(theta), thetadot])
+        return np.array([theta, thetadot])
+        #return np.array([np.cos(theta), np.sin(theta), thetadot])
 
     def render(self, mode='human'):
         l = self.l
