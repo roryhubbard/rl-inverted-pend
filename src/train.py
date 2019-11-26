@@ -82,12 +82,10 @@ class QLearning():
                     self.env.render()
 
 
-
-
 def main():
-    solution = QLearning()
-    solution.train()
-    return 
+    # solution = QLearning()
+    # solution.train()
+    # return
 
     env = PendulumEnv()
     env.reset()
@@ -96,13 +94,13 @@ def main():
         for _ in range(500):
             env.render()
             # next two lines should be commented out to do the 'switcheroo'
-            # u = np.array([0]).astype(env.action_space.dtype)
-            # info = env.step(u)
+            u = np.array([env.max_torque]).astype(env.action_space.dtype)
+            info = env.step(u)
 
             # the next line should be commented out to do the 'switcheroo'
-            a = env.action_space.sample()
-            info = env.step(a)
-            print(a)
+            # a = env.action_space.sample()
+            # info = env.step(a)
+            # print(a)
 
             time.sleep(.04)
     

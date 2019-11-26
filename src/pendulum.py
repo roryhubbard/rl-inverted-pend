@@ -12,17 +12,18 @@ class PendulumEnv(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, g=10.0):
+    def __init__(self, g=9.8):
         self.max_speed = 8
-        self.max_torque = 500.
+        self.max_torque = 100 # max torque = 38.6
         self.dt = .05
         self.g = g
 
-        self.m_pend = 1.
-        self.m_wheel = 1.
-        self.l = 3
+        self.m_wheel = 2.43842
+        motor_mass = .89
+        self.m_pend = 9.54063 - self.m_wheel + motor_mass
+        self.l = .68093
 
-        self.flywheel_diameter = 1.7
+        self.flywheel_diameter = .4
         self.flywheel_ang_vel = 0
         self.flywheel_ang = 0
         self.flywheel_max_ang_vel = 15
@@ -95,15 +96,16 @@ class PendulumEnv(gym.Env):
         l = self.l
         if self.viewer is None:
             self.viewer = rendering.Viewer(720,720)
-            self.viewer.set_bounds(-5,5,-5,5)
+            a = 1.8
+            self.viewer.set_bounds(-(l*a),l*a,-(l*a),l*a)
 
-            rod = rendering.make_capsule(l, .2)
+            rod = rendering.make_capsule(l, l/15.2)
             rod.set_color(.04, .39, .12)
             self.pole_transform = rendering.Transform()
             rod.add_attr(self.pole_transform)
             self.viewer.add_geom(rod)
 
-            axle = rendering.make_circle(.05)
+            axle = rendering.make_circle(.02)
             axle.set_color(0,0,0)
             self.viewer.add_geom(axle)
 
@@ -115,14 +117,14 @@ class PendulumEnv(gym.Env):
             flywheel_rim.add_attr(self.flywheel_rim_transform)
             self.viewer.add_geom(flywheel_rim)
 
-            flywheel_cross = rendering.make_cross(flywheel_diameter,0.1)
+            flywheel_cross = rendering.make_cross(flywheel_diameter,l/20)
             flywheel_cross.set_color(0.5,0.5,0.5)
             self.flywheel_cross_transform = rendering.Transform()
             flywheel_cross.add_attr(self.flywheel_cross_transform)
             self.viewer.add_geom(flywheel_cross)
 
             fname = path.join(path.dirname(__file__), "assets/clockwise.png")
-            self.img = rendering.Image(fname, 1., 1.)
+            self.img = rendering.Image(fname, .3, .3)
             self.imgtrans = rendering.Transform()
             self.img.add_attr(self.imgtrans)
 
@@ -148,7 +150,7 @@ class PendulumEnv(gym.Env):
         self.pole_transform.set_rotation(theta)
 
         sprocket_theta_offset = np.pi / 180
-        sprocket_length_offset = 0.21
+        sprocket_length_offset = 0.05
         self.sprocket_trans.set_translation((l+sprocket_length_offset) * np.cos(theta - sprocket_theta_offset+0.012), 
                                             (l+sprocket_length_offset) * np.sin(theta - sprocket_theta_offset))
         self.sprocket_trans.set_rotation(theta + np.pi * (2.795))
@@ -162,7 +164,7 @@ class PendulumEnv(gym.Env):
 
 
         img_offset = np.pi / 180
-        img_length_offset = 0.68
+        img_length_offset = 0.15
         self.imgtrans.translation = ((l+img_length_offset) * np.cos(theta - img_offset+0.02), (l+img_length_offset) * np.sin(theta - img_offset))
         
         if self.last_u:
