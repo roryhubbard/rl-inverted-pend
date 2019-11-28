@@ -4,6 +4,36 @@ import numpy as np
 import time
 
 
+def render_test():
+
+    env = PendulumEnv()
+    env.reset()
+
+    constant_torque = False
+
+    try:
+        for _ in range(500):
+            env.render()
+            
+            if constant_torque:
+                val = env.max_torque
+                u = np.array([val]).astype(env.action_space.dtype)
+                info = env.step(u)
+
+            else:
+                u = env.action_space.sample()
+                info = env.step(u)
+            
+            print(info)
+            
+            time.sleep(.04)
+    
+    except KeyboardInterrupt:
+        pass
+    
+    env.close()
+
+
 def main():
 
     solution = QLearning()
@@ -15,31 +45,6 @@ def main():
         pass
     
     solution.env.close()
-
-
-def render_test():
-
-    env = PendulumEnv()
-    env.reset()
-
-    try:
-        for _ in range(500):
-            env.render()
-            # next two lines should be commented out to do the 'switcheroo'
-            u = np.array([env.max_torque]).astype(env.action_space.dtype)
-            info = env.step(u)
-
-            # the next line should be commented out to do the 'switcheroo'
-            # a = env.action_space.sample()
-            # info = env.step(a)
-            # print(a)
-
-            time.sleep(.04)
-    
-    except KeyboardInterrupt:
-        pass
-    
-    env.close()
 
 
 if __name__ == '__main__':
