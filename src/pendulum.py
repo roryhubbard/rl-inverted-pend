@@ -32,7 +32,7 @@ class PendulumEnv(gym.Env):
         self.rotation_add = 0
 
         high = np.array([1., 1., self.max_speed])
-        # low = -self.max_torque
+
         self.action_space = spaces.Box(low=-self.max_torque, high=self.max_torque, shape=(1,), dtype=np.float32)
         self.observation_space = spaces.Box(low=-high, high=high, dtype=np.float32)
 
@@ -74,7 +74,6 @@ class PendulumEnv(gym.Env):
         self.flywheel_ang_vel = np.clip(self.flywheel_ang_vel, -self.flywheel_max_ang_vel, self.flywheel_max_ang_vel)
         newAng = self.flywheel_ang + self.flywheel_ang_vel * dt + 0.5*newAngAcc*dt**2
         newAngAcc = np.clip(newAngAcc,-self.flywheel_max_ang_vel, self.flywheel_max_ang_vel)
-        #print("new_Vel = ",self.flywheel_ang_vel)
 
         self.rotation_add = self.rotation_add + newAng #self.rotation_add + np.pi/10
 
