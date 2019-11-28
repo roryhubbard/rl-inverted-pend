@@ -14,7 +14,7 @@ class PendulumEnv(gym.Env):
 
     def __init__(self, g=9.8):
         self.max_speed = 8
-        self.max_torque = 100 # max torque = 38.6
+        self.max_torque = 50 # max torque = 38.6
         self.dt = .05
         self.g = g
 
