@@ -4,19 +4,24 @@ import numpy as np
 import time
 
 
-def render_test():
+def render_test(torque_type=0):
+    '''
+    torque_types:
+        - 0 : square wave torque to make the pendulum oscillate back and forth
+        - 1 : some constant value torque
+        - 2 (or anything else) : random torque
+    '''
 
     env = PendulumEnv()
     env.reset()
 
-    constant_torque = True
     at_rest = True
 
     try:
         for _ in range(500):
             env.render()
             
-            if constant_torque:
+            if torque_type == 0:
 
                 if env.state[0] == env.angle_limit and at_rest:
                     val = env.max_torque
@@ -29,6 +34,10 @@ def render_test():
                 if abs(env.state[0]) == env.angle_limit and not at_rest:
                     at_rest = True
 
+                u = np.array([val]).astype(env.action_space.dtype)
+
+            elif torque_type == 1:
+                val = -43
                 u = np.array([val]).astype(env.action_space.dtype)
 
             else:
@@ -63,4 +72,6 @@ def main():
 if __name__ == '__main__':
 
     # main()
-    render_test()
+
+    torque_type = 0
+    render_test(torque_type)
