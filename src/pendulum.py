@@ -55,8 +55,6 @@ class PendulumEnv(gym.Env):
         newthdot = self.calculate_new_thetadot(th, thdot, u)
         newth = self.calculate_new_theta(th, newthdot)
 
-        print(th)
-
         self.state = np.array([newth, newthdot])
 
         # make the flywheel speed up if given more torque
@@ -95,7 +93,8 @@ class PendulumEnv(gym.Env):
         num = (m_pend*l/2 + m_wheel*l) * g * np.sin(theta) - torque
         den = (m_pend*l**2)/3 + m_wheel*l**2
         new_theta_dot = theta_dot + (num / den) * dt
-        # new_theta_dot = np.clip(new_theta_dot, -self.max_speed, self.max_speed) #pylint: disable=E1111
+        
+        new_theta_dot = np.clip(new_theta_dot, -self.max_speed, self.max_speed) #pylint: disable=E1111
 
         return new_theta_dot
 
