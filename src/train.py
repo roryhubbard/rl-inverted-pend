@@ -9,14 +9,26 @@ def render_test():
     env = PendulumEnv()
     env.reset()
 
-    constant_torque = False
+    constant_torque = True
+    at_rest = True
 
     try:
         for _ in range(500):
             env.render()
             
             if constant_torque:
-                val = env.max_torque
+                
+                if env.state[0] == env.angle_limit and at_rest:
+                    val = env.max_torque
+                    at_rest = False
+
+                elif env.state[0] == -env.angle_limit and at_rest:
+                    val = -env.max_torque
+                    at_rest = False
+                
+                if abs(env.state[0]) == env.angle_limit and not at_rest:
+                    at_rest = True
+
                 u = np.array([val]).astype(env.action_space.dtype)
                 info = env.step(u)
 
@@ -24,9 +36,9 @@ def render_test():
                 u = env.action_space.sample()
                 info = env.step(u)
             
-            print(info)
-            
-            time.sleep(.04)
+            # print(info)
+
+            time.sleep(.1)
     
     except KeyboardInterrupt:
         pass
@@ -49,4 +61,5 @@ def main():
 
 if __name__ == '__main__':
 
-    main()
+    # main()
+    render_test()
