@@ -12,7 +12,7 @@ class PendulumEnv(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, g=9.8):
+    def __init__(self, g=9.81):
         self.max_speed = 8
         self.max_torque = 50 # max torque = 38.6
         self.dt = .05
@@ -27,7 +27,7 @@ class PendulumEnv(gym.Env):
         self.flywheel_ang_vel = 0
         self.flywheel_ang = 0
         self.flywheel_max_ang_vel = 15
-        self.angle_limit = np.pi/2 - np.arccos(self.l/(np.sqrt((self.flywheel_diameter/2)**2 + (self.l)**2)))
+        self.angle_limit = np.pi/2 # - np.arccos(self.l/(np.sqrt((self.flywheel_diameter/2)**2 + (self.l)**2)))
         self.viewer = None
         self.rotation_add = 0
 
@@ -38,33 +38,24 @@ class PendulumEnv(gym.Env):
 
         self.seed()
 
+
     def seed(self, seed=None):
         self.np_random, seed = seeding.np_random(seed)
         return [seed]
 
+
     def step(self,u):
         th, thdot = self.state # th := theta
-
-        g = self.g
-        m_pend = self.m_pend
-        m_wheel = self.m_wheel
-        l = self.l
         dt = self.dt
 
         u = np.clip(u, -self.max_torque, self.max_torque)[0]
         self.last_u = u # for rendering
-        #costs = angle_normalize(th)**2 + .1*thdot**2 + .001*(u**2)
-        costs = th ** 2 + .001*thdot**2
 
-        # m = 1.
-        # newthdot = thdot + (-3*g/(2*l) * np.sin(th + np.pi) + 3./(m*l**2)*u) * dt
-        num = -(m_pend*l/2 + m_wheel*l) * g * np.sin(th + np.pi) - u
-        den = (m_pend*l**2)/3 + m_wheel*l**2
-        newthdot = thdot + (num / den) * dt
-        
-        newth = th + newthdot*dt
-        newthdot = np.clip(newthdot, -self.max_speed, self.max_speed) #pylint: disable=E1111
-        newth = np.clip(newth, -self.angle_limit, self.angle_limit)
+        costs = self.calculate_cost(th, thdot, u)
+        newthdot = self.calculate_new_thetadot(th, thdot, u)
+        newth = self.calculate_new_theta(th, newthdot)
+
+        print(th)
 
         self.state = np.array([newth, newthdot])
 
@@ -79,21 +70,79 @@ class PendulumEnv(gym.Env):
 
         return self._get_obs(), -costs, False, {u}
 
+    
+    def calculate_cost(self, theta, theta_dot, torque):
+        # costs = angle_normalize(th)**2 + .1 * thdot**2 + .001 * torque**2
+        costs = theta**2 + .001 * theta_dot**2
+
+        return costs
+
+
+    def calculate_new_thetadot(self, theta, theta_dot, torque):
+        at_rest = self.is_at_rest(theta, torque)
+        if at_rest:
+            return 0
+
+        if abs(theta) == self.angle_limit:
+            theta_dot = 0
+
+        g = self.g
+        m_pend = self.m_pend
+        m_wheel = self.m_wheel
+        l = self.l
+        dt = self.dt
+
+        num = (m_pend*l/2 + m_wheel*l) * g * np.sin(theta) - torque
+        den = (m_pend*l**2)/3 + m_wheel*l**2
+        new_theta_dot = theta_dot + (num / den) * dt
+        # new_theta_dot = np.clip(new_theta_dot, -self.max_speed, self.max_speed) #pylint: disable=E1111
+
+        return new_theta_dot
+
+    
+    def is_at_rest(self, theta, torque):
+        g = self.g
+        m_pend = self.m_pend
+        m_wheel = self.m_wheel
+        l = self.l
+        gravitational_torque = (m_pend*l/2 + m_wheel*l) * g * np.sin(theta)
+
+        if theta == self.angle_limit and torque < gravitational_torque:
+            return True
+
+        elif theta == -self.angle_limit and -torque < gravitational_torque:
+            return True
+
+        else:
+            return False
+
+
+    def calculate_new_theta(self, theta, theta_dot):
+        dt = self.dt
+
+        newth = theta + theta_dot * dt
+        newth = np.clip(newth, -self.angle_limit, self.angle_limit)
+
+        return newth
+
+
     def reset(self):
-        high = np.array([np.pi/2, 1])
-        self.state = self.np_random.uniform(low=-high, high=high)
-        self.state = [self.angle_limit, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
+        # self.state = [self.angle_limit, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
+        self.state = [self.angle_limit, 0]
         self.last_u = None
         return self._get_obs()
+
 
     def _get_obs(self):
         theta, thetadot = self.state
         return np.array([theta, thetadot])
         #return np.array([np.cos(theta), np.sin(theta), thetadot])
 
+
     def render(self, mode='human'):
         l = self.l
         if self.viewer is None:
+            
             self.viewer = rendering.Viewer(720,720)
             a = 1.8
             self.viewer.set_bounds(-(l*a),l*a,-(l*a),l*a)
