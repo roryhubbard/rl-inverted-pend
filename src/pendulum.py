@@ -93,7 +93,7 @@ class PendulumEnv(gym.Env):
         num = (m_pend*l/2 + m_wheel*l) * g * np.sin(theta) - torque
         den = (m_pend*l**2)/3 + m_wheel*l**2
         new_theta_dot = theta_dot + (num / den) * dt
-        
+
         new_theta_dot = np.clip(new_theta_dot, -self.max_speed, self.max_speed) #pylint: disable=E1111
 
         return new_theta_dot
@@ -109,7 +109,7 @@ class PendulumEnv(gym.Env):
         if theta == self.angle_limit and torque < gravitational_torque:
             return True
 
-        elif theta == -self.angle_limit and -torque < gravitational_torque:
+        elif theta == -self.angle_limit and -torque < abs(gravitational_torque):
             return True
 
         else:
@@ -126,8 +126,7 @@ class PendulumEnv(gym.Env):
 
 
     def reset(self):
-        # self.state = [self.angle_limit, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
-        self.state = [self.angle_limit, 0]
+        self.state = [self.angle_limit, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
         self.last_u = None
         return self._get_obs()
 
