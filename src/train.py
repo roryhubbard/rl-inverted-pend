@@ -17,7 +17,7 @@ def render_test():
             env.render()
             
             if constant_torque:
-                
+
                 if env.state[0] == env.angle_limit and at_rest:
                     val = env.max_torque
                     at_rest = False
@@ -30,14 +30,15 @@ def render_test():
                     at_rest = True
 
                 u = np.array([val]).astype(env.action_space.dtype)
-                info = env.step(u)
 
             else:
                 u = env.action_space.sample()
-                info = env.step(u)
             
+            info = env.step(u)
             # print(info)
-
+            # print(env.state[0]) # print angular position
+            print(env.state[1]) # print angular velocity
+            
             time.sleep(.1)
     
     except KeyboardInterrupt:
