@@ -27,7 +27,7 @@ class PendulumEnv(gym.Env):
         self.flywheel_ang_vel = 0
         self.flywheel_ang = 0
         self.flywheel_max_ang_vel = 15
-        self.angle_limit = np.pi/2 # - np.arccos(self.l/(np.sqrt((self.flywheel_diameter/2)**2 + (self.l)**2)))
+        self.angle_limit = np.pi/2 - np.arccos(self.l/(np.sqrt((self.flywheel_diameter/2)**2 + (self.l)**2)))
         self.viewer = None
         self.rotation_add = 0
 
@@ -70,9 +70,8 @@ class PendulumEnv(gym.Env):
 
     
     def calculate_cost(self, theta, theta_dot, torque):
-        # costs = angle_normalize(th)**2 + .1 * thdot**2 + .001 * torque**2
-        costs = theta**2 + .001 * theta_dot**2
-
+        costs = angle_normalize(theta)**2 + .1 * theta_dot**2 + .001 * torque**2
+        # costs = theta**2 + .001 * theta_dot**2
         return costs
 
 
@@ -126,7 +125,11 @@ class PendulumEnv(gym.Env):
 
 
     def reset(self):
-        self.state = [self.angle_limit, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
+        # self.state = [self.angle_limit, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
+        self.state = np.array([
+            np.random.uniform(-self.angle_limit, self.angle_limit, 1)[0],
+            np.random.uniform(-self.max_speed, self.max_speed, 1)[0]
+        ])
         self.last_u = None
         return self._get_obs()
 
