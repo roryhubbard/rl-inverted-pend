@@ -15,8 +15,9 @@ def render_test(torque_type=0):
     env = PendulumEnv()
     env.reset()
 
-    at_rest = True
-
+    at_rest = False
+    val = 0
+    
     try:
         for _ in range(500):
             env.render()
