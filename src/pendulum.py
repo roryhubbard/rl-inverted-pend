@@ -18,6 +18,10 @@ class PendulumEnv(gym.Env):
         self.dt = .05
         self.g = g
 
+        self.is_done = False
+        self.started_right = None
+        self.switched_sides = False
+
         self.m_wheel = 2.43842
         motor_mass = .89
         self.m_pend = 9.54063 - self.m_wheel + motor_mass
@@ -66,12 +70,34 @@ class PendulumEnv(gym.Env):
 
         self.rotation_add = self.rotation_add + newAng #self.rotation_add + np.pi/10
 
-        return self._get_obs(), -costs, False, {u}
+        self.check_if_done()
+
+        return newth, newthdot, -costs
+
+    
+    def check_if_done(self):
+        self.check_switched_sides()
+        if self.switched_sides and abs(self.state[0]) == self.angle_limit:
+            self.is_done = True
+            # print('is done')
+        
+
+    def check_switched_sides(self):
+        if self.started_right:
+            if self.state[0] > 0:
+                self.switched_sides = True
+                # print('switched')
+        
+        else:
+            if self.state[0] < 0:
+                self.switched_sides = True
+                # print('switched')
 
     
     def calculate_cost(self, theta, theta_dot, torque):
-        costs = angle_normalize(theta)**2 + .1 * theta_dot**2 + .001 * torque**2
         # costs = theta**2 + .001 * theta_dot**2
+        costs = theta**2 + .1*theta_dot**2 + .00001*(torque**2) # original cost equation
+
         return costs
 
 
@@ -92,7 +118,6 @@ class PendulumEnv(gym.Env):
         num = (m_pend*l/2 + m_wheel*l) * g * np.sin(theta) - torque
         den = (m_pend*l**2)/3 + m_wheel*l**2
         new_theta_dot = theta_dot + (num / den) * dt
-
         new_theta_dot = np.clip(new_theta_dot, -self.max_speed, self.max_speed) #pylint: disable=E1111
 
         return new_theta_dot
@@ -130,6 +155,15 @@ class PendulumEnv(gym.Env):
             np.random.uniform(-self.angle_limit, self.angle_limit, 1)[0],
             np.random.uniform(-self.max_speed, self.max_speed, 1)[0]
         ])
+
+        self.is_done = False
+        self.switched_sides = False
+
+        if self.state[0] >= 0:
+            self.started_right = False
+        else:
+            self.started_right = True
+
         self.last_u = None
         return self._get_obs()
 
@@ -225,7 +259,3 @@ class PendulumEnv(gym.Env):
         if self.viewer:
             self.viewer.close()
             self.viewer = None
-
-
-def angle_normalize(x):
-    return (((x+np.pi) % (2*np.pi)) - np.pi)
