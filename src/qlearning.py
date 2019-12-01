@@ -13,7 +13,7 @@ class QLearning():
         self.save_directory = 'saved_policies'
 
         self.epsilon = .2
-        self.gamma = .95
+        self.gamma = .99
 
         self.num_avail_actions = 31
         self.num_avail_positions = 51
@@ -62,7 +62,7 @@ class QLearning():
         return u
 
 
-    def train(self, episodes=10000, max_iterations=150000, l_rate=0.1):
+    def train(self, episodes=15000, max_iterations=200000, l_rate=0.1):
         self.start_time = time.time()
 
         for episode_num in range(episodes):
@@ -94,7 +94,7 @@ class QLearning():
                                                                         - self.q_matrix[currTorIdx, currThIdx, currThdotIdx])
 
                 if iter_count % 100 == 0:
-                    self.env.render()
+                    # self.env.render()
                     print('iter_count = ', iter_count)
                     print('episode = ', episode_num)
                     print("Time Elapsed: ",time.strftime("%H:%M:%S",time.gmtime(time.time()-self.start_time)))

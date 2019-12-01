@@ -47,7 +47,7 @@ def render_test(torque_type=0):
             info = env.step(u)
             # print(info[1])
             # print(env.state[0]) # print angular position
-            print(env.state[1]) # print angular velocity
+            # print(env.state[1]) # print angular velocity
             
             time.sleep(.1)
     

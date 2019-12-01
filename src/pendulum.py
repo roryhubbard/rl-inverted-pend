@@ -96,7 +96,7 @@ class PendulumEnv(gym.Env):
     
     def calculate_cost(self, theta, theta_dot, torque):
         # costs = theta**2 + .001 * theta_dot**2
-        costs = theta**2 + .1*theta_dot**2 + .00001*(torque**2) # original cost equation
+        costs = theta**2 + .1*theta_dot**2 + .00001*(torque**2)
 
         return costs
 
