@@ -7,9 +7,9 @@ import os
 
 class QLearning():
 
-    def __init__(self):
+    def __init__(self, goal_theta=0):
 
-        self.env = PendulumEnv()
+        self.env = PendulumEnv(goal_theta)
         self.save_directory = 'saved_policies'
 
         self.epsilon = .2

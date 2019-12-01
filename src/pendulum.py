@@ -12,11 +12,13 @@ class PendulumEnv(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, g=9.81):
+    def __init__(self, goal_theta=0, g=9.81):
         self.max_speed = 8
         self.max_torque = 50 # max torque = 38.6
         self.dt = .05
         self.g = g
+
+        self.goal_theta = goal_theta
 
         self.is_done = False
         self.started_right = None
@@ -96,7 +98,7 @@ class PendulumEnv(gym.Env):
     
     def calculate_cost(self, theta, theta_dot, torque):
         # costs = theta**2 + .001 * theta_dot**2
-        costs = theta**2 + .1*theta_dot**2 + .00001*(torque**2)
+        costs = (self.goal_theta - theta)**2 + .1*theta_dot**2 + .00001*(torque**2)
 
         return costs
 
