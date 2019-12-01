@@ -38,14 +38,14 @@ def render_test(torque_type=0):
                 u = np.array([val]).astype(env.action_space.dtype)
 
             elif torque_type == 1:
-                val = -43
+                val = 0
                 u = np.array([val]).astype(env.action_space.dtype)
 
             else:
                 u = env.action_space.sample()
             
             info = env.step(u)
-            # print(info)
+            # print(info[1])
             # print(env.state[0]) # print angular position
             print(env.state[1]) # print angular velocity
             
@@ -71,8 +71,9 @@ def main():
 
 
 if __name__ == '__main__':
+    np.random.seed(0)
 
-    # main()
+    main()
 
-    torque_type = 0
-    render_test(torque_type)
+    # torque_type = 0
+    # render_test(torque_type)
