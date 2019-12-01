@@ -1,9 +1,7 @@
 import numpy as np
 import time
-import sys
 from pendulum import PendulumEnv
 import random
-import copy
 import os
 
 
