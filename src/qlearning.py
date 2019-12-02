@@ -102,8 +102,6 @@ class QLearning():
                 th = nextTh
                 thdot = nextThdot
 
-                time.sleep(.05)
-
         print("Training Done")
         print("Total Time Elapsed: ",time.strftime("%H:%M:%S",time.gmtime(time.time()-self.start_time)))
 
