@@ -12,11 +12,11 @@ class PendulumEnv(gym.Env):
         'video.frames_per_second' : 30
     }
 
-    def __init__(self, goal_theta=0, g=9.81):
+    def __init__(self, goal_theta=0):
         self.max_speed = 8
         self.max_torque = 50 # max torque = 38.6
         self.dt = .05
-        self.g = g
+        self.g = 9.81
 
         self.goal_theta = goal_theta
 
@@ -77,25 +77,6 @@ class PendulumEnv(gym.Env):
         return newth, newthdot, -costs
 
     
-    def check_if_done(self):
-        self.check_switched_sides()
-        if self.switched_sides and abs(self.state[0]) == self.angle_limit:
-            self.is_done = True
-            # print('is done')
-        
-
-    def check_switched_sides(self):
-        if self.started_right:
-            if self.state[0] > 0:
-                self.switched_sides = True
-                # print('switched')
-        
-        else:
-            if self.state[0] < 0:
-                self.switched_sides = True
-                # print('switched')
-
-    
     def calculate_cost(self, theta, theta_dot, torque):
         # costs = theta**2 + .001 * theta_dot**2
         costs = (self.goal_theta - theta)**2 + .1*theta_dot**2 + .00001*(torque**2)
@@ -150,6 +131,22 @@ class PendulumEnv(gym.Env):
 
         return newth
 
+    
+    def check_if_done(self):
+        self.check_switched_sides()
+        if self.switched_sides and abs(self.state[0]) == self.angle_limit:
+            self.is_done = True
+        
+
+    def check_switched_sides(self):
+        if self.started_right:
+            if self.state[0] > self.goal_theta:
+                self.switched_sides = True
+        
+        else:
+            if self.state[0] < self.goal_theta:
+                self.switched_sides = True
+
 
     def reset(self):
         # self.state = [self.angle_limit, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
@@ -161,7 +158,7 @@ class PendulumEnv(gym.Env):
         self.is_done = False
         self.switched_sides = False
 
-        if self.state[0] >= 0:
+        if self.state[0] >= self.goal_theta:
             self.started_right = False
         else:
             self.started_right = True

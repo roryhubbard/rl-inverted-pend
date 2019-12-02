@@ -115,7 +115,7 @@ class Simulator():
 
 
 def main():
-    # fname = 'untrained_policy.npy'
+    # fname = '2019_12_1_18_24_43.npy'
     sim = Simulator()
     sim.simulate()
 

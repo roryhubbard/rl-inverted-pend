@@ -45,9 +45,6 @@ def render_test(torque_type=0):
                 u = env.action_space.sample()
             
             info = env.step(u)
-            # print(info[1])
-            # print(env.state[0]) # print angular position
-            # print(env.state[1]) # print angular velocity
             
             time.sleep(.1)
     
@@ -60,20 +57,20 @@ def render_test(torque_type=0):
 def main():
 
     desired_theta = np.pi / 4
-    solution = QLearning(desired_theta)
+    solution = QLearning(goal_theta=desired_theta)
 
     try:
         solution.train()
     
     except KeyboardInterrupt:
-        pass
+        solution.save_policy()
     
     solution.env.close()
 
 
 if __name__ == '__main__':
     np.random.seed(0)
-
+    
     main()
 
     # torque_type = 0

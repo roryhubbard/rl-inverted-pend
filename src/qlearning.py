@@ -8,8 +8,7 @@ import os
 class QLearning():
 
     def __init__(self, goal_theta=0):
-
-        self.env = PendulumEnv(goal_theta)
+        self.env = PendulumEnv(goal_theta=goal_theta)
         self.save_directory = 'saved_policies'
 
         self.epsilon = .2
@@ -62,7 +61,7 @@ class QLearning():
         return u
 
 
-    def train(self, episodes=15000, max_iterations=200000, l_rate=0.1):
+    def train(self, episodes=30000, max_iterations=100000, l_rate=0.1):
         self.start_time = time.time()
 
         for episode_num in range(episodes):
@@ -103,6 +102,8 @@ class QLearning():
                 th = nextTh
                 thdot = nextThdot
 
+                time.sleep(.05)
+
         print("Training Done")
         print("Total Time Elapsed: ",time.strftime("%H:%M:%S",time.gmtime(time.time()-self.start_time)))
 
@@ -114,6 +115,8 @@ class QLearning():
         fname = self.get_fname(time_struct)
         save_path = os.path.join(self.save_directory, fname)
         np.save(save_path, self.q_matrix)
+
+        print(f'saved policy: {fname}')
 
 
     def get_fname(self, time_params):
