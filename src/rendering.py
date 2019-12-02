@@ -310,12 +310,14 @@ class PolyLine(Geom):
         self.linewidth.stroke = x
 
 class Line(Geom):
-    def __init__(self, start=(0.0, 0.0), end=(0.0, 0.0)):
+    def __init__(self, start=(0.0, 0.0), end=(0.0, 0.0), t=1, d=0):
         Geom.__init__(self)
         self.start = start
         self.end = end
-        self.linewidth = LineWidth(1)
+        self.linewidth = LineWidth(t)
+        self.linestyle = LineStyle(d)
         self.add_attr(self.linewidth)
+        self.add_attr(self.linestyle)
 
     def render1(self):
         glBegin(GL_LINES)
