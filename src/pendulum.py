@@ -140,11 +140,11 @@ class PendulumEnv(gym.Env):
 
     def check_switched_sides(self):
         if self.started_right:
-            if self.state[0] > self.goal_theta:
+            if self.state[0] > 0:
                 self.switched_sides = True
         
         else:
-            if self.state[0] < self.goal_theta:
+            if self.state[0] < 0:
                 self.switched_sides = True
 
 
@@ -158,7 +158,7 @@ class PendulumEnv(gym.Env):
         self.is_done = False
         self.switched_sides = False
 
-        if self.state[0] >= self.goal_theta:
+        if self.state[0] >= 0:
             self.started_right = False
         else:
             self.started_right = True

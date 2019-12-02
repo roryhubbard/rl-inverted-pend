@@ -61,7 +61,7 @@ class QLearning():
         return u
 
 
-    def train(self, episodes=30000, max_iterations=100000, l_rate=0.1):
+    def train(self, episodes=15000, max_iterations=150000, l_rate=0.1):
         self.start_time = time.time()
 
         for episode_num in range(episodes):

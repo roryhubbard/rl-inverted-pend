@@ -40,11 +40,11 @@ class Simulator():
         file_count = 0
         for policy in all_policies:
             if not policy.startswith('.'): # ignore .DS files, its a Mac thing
-                file_count += 1
                 fname, _ = os.path.splitext(policy)
 
                 try:
                     time_components = np.array(list(map(int, fname.split('_'))))
+                    file_count += 1
                 except ValueError:
                     continue
 
@@ -115,7 +115,7 @@ class Simulator():
 
 
 def main():
-    # fname = '2019_12_1_18_24_43.npy'
+    # fname = '2019_12_1_22_13_8.npy'
     sim = Simulator()
     sim.simulate()
 
