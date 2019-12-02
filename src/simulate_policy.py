@@ -8,15 +8,18 @@ import os
 
 class Simulator():
 
-    def __init__(self, policy_name=None):
+    def __init__(self, goal_theta=0, policy_name=None, policy_directory=None):
 
-        self.env = PendulumEnv()
+        self.env = PendulumEnv(goal_theta=goal_theta)
         self.trainer = QLearning()
         self.num_actions = self.trainer.num_avail_actions
         self.num_positions = self.trainer.num_avail_positions
         self.num_velocities = self.trainer.num_avail_velocities
 
-        self.load_directory = self.trainer.save_directory
+        if policy_directory is None:
+            self.load_directory = self.trainer.save_directory
+        else:
+            self.load_directory = policy_directory
 
         if policy_name is None:
             policy_name = self.grab_newest_policy()
@@ -116,7 +119,9 @@ class Simulator():
 
 def main():
     # fname = '2019_12_1_22_13_8.npy'
-    sim = Simulator()
+    pol_dir = 'good_policies'
+    g_theta = - np.pi / 4
+    sim = Simulator(goal_theta=g_theta, policy_directory=pol_dir)
     sim.simulate()
 
 
