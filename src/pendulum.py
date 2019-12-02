@@ -217,14 +217,17 @@ class PendulumEnv(gym.Env):
             self.viewer.add_geom(self.sprocket)
             self.sprocket_trans.scale = (self.flywheel_diameter/1.6,self.flywheel_diameter/1.8)
 
-            # uncomment if you want to have an axle at the opposite end of the rod
-            # need to comment out equal lines above
-            #flywheel = rendering.make_circle(0.85,filled=False)
-            #flywheel.set_linewidth(5)
-            #flywheel.set_color(0.5,0.5,0.5)
-            #self.flywheel_transform = rendering.Transform()
-            #flywheel.add_attr(self.flywheel_transform)
-            #self.viewer.add_geom(flywheel)             
+            st = (0, 0)
+            le = 1.5
+            end = (-le * np.sin(self.goal_theta), le * np.cos(self.goal_theta))
+            # 0x0101 dotted
+            # 0x00FF dashed
+            # 0x1C47 dashed/dot/dash
+            thickness = 7
+            pattern = 0x1C47
+            setpoint_line = rendering.Line(st, end, thickness, pattern)
+            setpoint_line.set_color(0, 0, 0)
+            self.viewer.add_geom(setpoint_line)
 
         self.viewer.add_onetime(self.img)
 
