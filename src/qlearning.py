@@ -11,7 +11,7 @@ class QLearning():
         self.env = PendulumEnv(goal_theta=goal_theta)
         self.save_directory = 'saved_policies'
 
-        self.epsilon = .2
+        self.epsilon = .25
         self.gamma = .99
 
         self.num_avail_actions = 31

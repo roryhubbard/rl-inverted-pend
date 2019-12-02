@@ -56,7 +56,7 @@ def render_test(torque_type=0):
 
 def main():
 
-    desired_theta = -np.pi / 4
+    desired_theta = 0
     solution = QLearning(goal_theta=desired_theta)
 
     try:
