@@ -119,9 +119,9 @@ class Simulator():
 
 def main():
     # fname = '2019_12_1_22_13_8.npy'
-    pol_dir = 'good_policies'
-    g_theta = - np.pi / 4
-    sim = Simulator(goal_theta=g_theta, policy_directory=pol_dir)
+    # pol_dir = 'good_policies'
+    # g_theta = 0
+    sim = Simulator()
     sim.simulate()
 
 
