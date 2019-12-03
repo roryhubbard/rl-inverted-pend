@@ -11,7 +11,7 @@ class QLearning():
         self.env = PendulumEnv(goal_theta=goal_theta)
         self.save_directory = 'saved_policies'
 
-        self.epsilon = .25
+        self.epsilon = .2
         self.gamma = .99
 
         self.num_avail_actions = 31
@@ -27,6 +27,24 @@ class QLearning():
             self.num_avail_positions,
             self.num_avail_velocities
         ))
+
+        self.converge_threshold = 0.05 # % of q-value that dq must be close to to be considered converged
+        self.perc_conv_thresh = 0.8 # % of q-values that must pass the convergence threshold
+
+        self.percent_converged = 0
+        self.percent_unexplored = 0
+
+        self.prev_q_matrix = np.zeros((
+            self.num_avail_actions,
+            self.num_avail_positions,
+            self.num_avail_velocities
+        )) # previous q-matrix
+
+        self.dq_matrix = 100 * np.ones((
+            self.num_avail_actions,
+            self.num_avail_positions,
+            self.num_avail_velocities
+        )) # delta-q matrix, tracks amount each weight is being updated
     
 
     def getQMatrixIdx(self, th, thdot, torque):
@@ -59,9 +77,31 @@ class QLearning():
         u = np.array([action]).astype(self.env.action_space.dtype)
 
         return u
+    
+
+    def check_converged(self):
+        # total number of elements
+        total_elements = self.q_matrix.size
+        
+        percent_changed = np.divide(self.dq_matrix, self.q_matrix,
+                        out=np.ones(self.q_matrix.shape),
+                        where=self.q_matrix != 0)
+
+        # compute the number of 'converged' q-values
+        num_converged = (percent_changed < self.converge_threshold).sum()
+        # percentage of converged q-values
+        self.percent_converged = num_converged / total_elements
+
+        self.percent_unexplored = (self.dq_matrix == 100).sum() / self.dq_matrix.size
+
+        if self.percent_converged >= self.perc_conv_thresh:
+            return True
+
+        else:
+            return False
 
 
-    def train(self, episodes=15000, max_iterations=150000, l_rate=0.1):
+    def train(self, episodes=50000, max_iterations=50000, l_rate=0.1):
         self.start_time = time.time()
 
         for episode_num in range(episodes):
@@ -89,23 +129,44 @@ class QLearning():
                 _, nextQVal = self.getMaxQValue(nextThIdx, nextThdotIdx)
 
                 self.q_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx] \
-                                                                        + l_rate * (reward + self.gamma * nextQVal \
-                                                                        - self.q_matrix[currTorIdx, currThIdx, currThdotIdx])
+                                                                    + l_rate * (reward + self.gamma * nextQVal \
+                                                                    - self.q_matrix[currTorIdx, currThIdx, currThdotIdx])
 
+
+                self.dq_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx] \
+                                                                    - self.prev_q_matrix[currTorIdx, currThIdx, currThdotIdx]
+
+                self.prev_q_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx]
+
+                th = nextTh
+                thdot = nextThdot
+                    
                 if iter_count % 100 == 0:
                     # self.env.render()
                     print('iter_count = ', iter_count)
                     print('episode = ', episode_num)
+                    print('epsilon = ', self.epsilon)
+                    print(f'percent converged = {round(self.percent_converged, 2)}')
+                    print(f'percent unexplored = {round(self.percent_unexplored, 2)}')
                     print("Time Elapsed: ",time.strftime("%H:%M:%S",time.gmtime(time.time()-self.start_time)))
                     print('')
-
-                th = nextTh
-                thdot = nextThdot
-
-        print("Training Done")
-        print("Total Time Elapsed: ",time.strftime("%H:%M:%S",time.gmtime(time.time()-self.start_time)))
+                    
+            converged = self.check_converged()
+            
+            if converged:
+                print(f'Converged on episode {episode_num}')
+                break
+            
+            self.increase_epsilon_maybe(episode_num)
+        
+        self.print_stuff()
 
         self.save_policy()
+
+    
+    def increase_epsilon_maybe(self, ep_num):
+        if ep_num % 1000 == 0 and ep_num != 0:
+            self.epsilon -= .006
 
     
     def save_policy(self):
@@ -128,3 +189,11 @@ class QLearning():
         fname = f'{year}_{month}_{day}_{hour}_{minute}_{sec}'
 
         return fname
+    
+
+    def print_stuff(self):
+
+        print("Training Done")
+        print("Total Time Elapsed: ",time.strftime("%H:%M:%S",time.gmtime(time.time()-self.start_time)))
+        print(f'percent converged = {round(self.percent_converged, 2)}')
+        print(f'percent unexplored = {round(self.percent_unexplored, 2)}')

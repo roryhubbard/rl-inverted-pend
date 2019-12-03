@@ -56,7 +56,7 @@ def render_test(torque_type=0):
 
 def main():
 
-    desired_theta = 0
+    desired_theta = np.pi / 4
     solution = QLearning(goal_theta=desired_theta)
 
     try:
@@ -64,6 +64,8 @@ def main():
     
     except KeyboardInterrupt:
         solution.save_policy()
+        print(f'percent converged = {round(solution.percent_converged, 2)}')
+        print(f'percent unexplored = {round(solution.percent_unexplored, 2)}')
     
     solution.env.close()
 
