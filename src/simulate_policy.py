@@ -118,10 +118,10 @@ class Simulator():
 
 
 def main():
-    # fname = '2019_12_1_22_13_8.npy'
-    # pol_dir = 'good_policies'
+    fname = '2019_12_1_18_24_43.npy'
+    pol_dir = 'good_policies'
     g_theta = 0
-    sim = Simulator(g_theta)
+    sim = Simulator(goal_theta=g_theta, policy_name=fname, policy_directory=pol_dir)
     sim.simulate()
 
 
