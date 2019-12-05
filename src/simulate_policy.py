@@ -182,9 +182,9 @@ class Simulator():
 
 
 def main():
-    fname = '2019_12_1_18_24_43.npy'
+    fname = None
     pol_dir = 'good_policies'
-    sim = Simulator()
+    sim = Simulator(policy_directory=pol_dir)
     sim.simulate()
 
 
