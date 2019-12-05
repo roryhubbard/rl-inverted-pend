@@ -62,8 +62,8 @@ class PendulumEnv(gym.Env):
         fwthdot = ms * self.gear_ratio
         fwthdot = np.clip(fwthdot, -self.flywheel_max_thdot, self.flywheel_max_thdot)
 
-        pendulum_acc = thdot - self.pend_prev_thdot
-        flywheel_acc = fwthdot - self.flywheel_prev_thdot
+        pendulum_acc = (thdot - self.pend_prev_thdot) / dt
+        flywheel_acc = (fwthdot - self.flywheel_prev_thdot) / dt
 
         u = self.flywheel_I * (pendulum_acc + flywheel_acc)
         u = np.clip(u, -self.max_torque, self.max_torque)[0]

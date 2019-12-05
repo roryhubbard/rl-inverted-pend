@@ -155,7 +155,7 @@ class QLearning():
                 fwdot = nextFwdot
                     
                 if iter_count % 100 == 0:
-                    self.env.render()
+                    # self.env.render()
                     print('iter_count = ', iter_count)
                     print('episode = ', episode_num)
                     print('epsilon = ', self.epsilon)
