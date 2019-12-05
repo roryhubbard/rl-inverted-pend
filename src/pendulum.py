@@ -24,8 +24,14 @@ class PendulumEnv(gym.Env):
         self.started_right = None
         self.switched_sides = False
 
+        small_sprock_teeth = 6
+        big_sprock_teeth = 60
+        self.gear_ratio = small_sprock_teeth / big_sprock_teeth
+
         self.flywheel_diameter = .4
-        self.flywheel_max_thdot = 15
+        self.max_motor_speed = 603.19 # rad/s
+        self.flywheel_th = 0
+        self.flywheel_max_thdot = self.max_motor_speed * self.gear_ratio
         self.flywheel_I = 54461568.26 / 1e9 # flywheel inertia in kg * m^2
         self.flywheel_prev_thdot = 0
 
@@ -49,9 +55,11 @@ class PendulumEnv(gym.Env):
         return [seed]
 
 
-    def step(self, fwthdot):
+    def step(self, ms):
         th, thdot = self.state # th := theta
+        dt = self.dt
 
+        fwthdot = ms * self.gear_ratio
         fwthdot = np.clip(fwthdot, -self.flywheel_max_thdot, self.flywheel_max_thdot)
 
         pendulum_acc = thdot - self.pend_prev_thdot
@@ -62,25 +70,19 @@ class PendulumEnv(gym.Env):
         self.last_u = u # for rendering
 
         costs = self.calculate_cost(th, thdot, u)
-        newthdot = self.calculate_new_thetadot(th, thdot, u)
+        newthdot = self.calculate_new_thetadot(th, thdot, flywheel_acc, u)
         newth = self.calculate_new_theta(th, newthdot)
 
         self.state = np.array([newth, newthdot])
-
-        # make the flywheel speed up if given more torque
-        # newAngAcc = self.flywheel_thdot + (u*0.5)*dt
-        # self.flywheel_thdot = self.flywheel_thdot + (u*0.005)*dt
-        # self.flywheel_thdot = np.clip(self.flywheel_thdot, -self.flywheel_max_thdot, self.flywheel_max_thdot)
-        # newAng = self.flywheel_th + self.flywheel_thdot * dt + 0.5*newAngAcc*dt**2
-        # newAngAcc = np.clip(newAngAcc,-self.flywheel_max_thdot, self.flywheel_max_thdot)
-        # self.rotation_add = self.rotation_add + newAng #self.rotation_add + np.pi/10
-
+        
         self.pend_prev_thdot = thdot
         self.flywheel_prev_thdot = fwthdot
 
+        self.flywheel_th += fwthdot * dt # for rendering
+
         self.check_if_done()
 
-        return newth, newthdot, -costs
+        return newth, newthdot, fwthdot, -costs
 
     
     def calculate_cost(self, theta, theta_dot, torque):
@@ -90,7 +92,7 @@ class PendulumEnv(gym.Env):
         return costs
 
 
-    def calculate_new_thetadot(self, theta, theta_dot, torque):
+    def calculate_new_thetadot(self, theta, theta_dot, fly_acc, torque):
         at_rest = self.is_at_rest(theta, torque)
         if at_rest:
             return 0
@@ -104,8 +106,8 @@ class PendulumEnv(gym.Env):
         l = self.l
         dt = self.dt
 
-        num = (m_pend*l/2 + m_wheel*l) * g * np.sin(theta) - torque
-        den = (m_pend*l**2)/3 + m_wheel*l**2
+        num = (m_pend*l/2 + m_wheel*l) * g * np.sin(theta) - self.flywheel_I * fly_acc
+        den = (m_pend*l**2)/3 + m_wheel*l**2 + self.flywheel_I
         new_theta_dot = theta_dot + (num / den) * dt
         new_theta_dot = np.clip(new_theta_dot, -self.max_speed, self.max_speed) #pylint: disable=E1111
 
@@ -173,13 +175,9 @@ class PendulumEnv(gym.Env):
 
         self.last_u = None
 
-        return self._get_obs()
+        full_state = np.concatenate((self.state, self.flywheel_thdot))
 
-
-    def _get_obs(self):
-        theta, thetadot = self.state
-        return np.array([theta, thetadot])
-        #return np.array([np.cos(theta), np.sin(theta), thetadot])
+        return full_state
 
 
     def render(self, mode='human'):
@@ -254,7 +252,7 @@ class PendulumEnv(gym.Env):
         self.flywheel_rim_transform.set_rotation(theta + np.pi/4)
 
         self.flywheel_cross_transform.set_translation(l * np.cos(theta - flywheel_offset), l * np.sin(theta - flywheel_offset))
-        self.flywheel_cross_transform.set_rotation(theta + self.rotation_add)
+        self.flywheel_cross_transform.set_rotation(self.flywheel_th)
 
 
         img_offset = np.pi / 180

@@ -14,6 +14,7 @@ class Simulator():
         self.num_actions = self.trainer.num_avail_actions
         self.num_positions = self.trainer.num_avail_positions
         self.num_velocities = self.trainer.num_avail_velocities
+        self.num_fw_thdot = self.trainer.num_fw_thdot
 
         if policy_directory is None:
             self.load_directory = self.trainer.save_directory
@@ -33,6 +34,7 @@ class Simulator():
         self.thetas = np.linspace(-self.env.angle_limit, self.env.angle_limit, self.num_positions)
         self.theta_dots = np.linspace(-self.env.max_speed, self.env.max_speed, self.num_velocities)
         self.actions = np.linspace(-self.env.max_torque, self.env.max_torque, self.num_actions)
+        self.fwdot = np.linspace(-self.env.flywheel_max_thdot, self.env.flywheel_max_thdot, self.num_fw_thdot)
 
     
     def load_policy(self):
@@ -127,28 +129,29 @@ class Simulator():
         return num, den
 
 
-    def getQMatrixIdx(self, th, thdot, torque):
+    def getQMatrixIdx(self, th, thdot, torque, fwdot):
         thIdx = np.abs(self.thetas - th).argmin()
         thdotIdx = np.abs(self.theta_dots - thdot).argmin()
         torIdx = np.abs(self.actions - torque).argmin()
+        fwdotIdx = np.abs(self.fwdot - fwdot).argmin()
 
-        return torIdx, thIdx, thdotIdx
+        return torIdx, thIdx, thdotIdx, fwdotIdx
 
 
-    def getMaxQValue(self, th, thdot):
+    def getMaxQValue(self, th, thdot, fwdot):
         # returns the depth index for given th,thdot state where torque is highest
-        maxQValIdx = self.policy[:, th, thdot].argmax()
-        maxQVal = self.policy[maxQValIdx, th, thdot]
+        maxQValIdx = self.policy[:, th, thdot, fwdot].argmax()
+        maxQVal = self.policy[maxQValIdx, th, thdot, fwdot]
 
         return maxQValIdx, maxQVal
 
 
-    def get_action(self, th, thdot):
-        _, thIdx, thdotIdx = self.getQMatrixIdx(th, thdot, 0)
-        chosen_idx, _ = self.getMaxQValue(thIdx, thdotIdx)
+    def get_action(self, th, thdot, fwdot):
+        _, thIdx, thdotIdx, fwdotIdx = self.getQMatrixIdx(th, thdot, 0, fwdot)
+        chosen_idx, _ = self.getMaxQValue(thIdx, thdotIdx, fwdotIdx)
 
         action = self.actions[chosen_idx]
-        u = np.array([action]).astype(self.env.action_space.dtype)
+        u = np.array([action]).astype(np.float32)
 
         return u
 
@@ -156,18 +159,19 @@ class Simulator():
     def simulate(self):
         print(f'Running simulation using policy: {self.file}')
 
-        th, thdot = self.env.reset()
+        th, thdot, fwdot = self.env.reset()
 
         try:
             for _ in range(500):
 
                 self.env.render()
 
-                u = self.get_action(th, thdot)
-                nextTh, nextThdot, _ = self.env.step(u)
+                u = self.get_action(th, thdot, fwdot)
+                nextTh, nextThdot, nextFwdot, _ = self.env.step(u)
 
                 th = nextTh
                 thdot = nextThdot
+                fwdot = nextFwdot
                 
                 time.sleep(.05)
         

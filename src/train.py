@@ -13,7 +13,7 @@ def render_test(torque_type=0):
     '''
 
     env = PendulumEnv()
-    env.reset()
+    a = env.reset()
 
     at_rest = False
     val = 0
@@ -25,26 +25,30 @@ def render_test(torque_type=0):
             if torque_type == 0:
 
                 if env.state[0] == env.angle_limit and at_rest:
-                    val = env.max_torque
+                    val = env.flywheel_max_thdot
                     at_rest = False
 
                 elif env.state[0] == -env.angle_limit and at_rest:
-                    val = -env.max_torque
+                    val = -env.flywheel_max_thdot
                     at_rest = False
                 
                 if abs(env.state[0]) == env.angle_limit and not at_rest:
                     at_rest = True
 
-                u = np.array([val]).astype(env.action_space.dtype)
+                s = np.array([val]).astype(np.float32)
 
             elif torque_type == 1:
                 val = 0
-                u = np.array([val]).astype(env.action_space.dtype)
+                s = np.array([val]).astype(np.float32)
 
             else:
-                u = env.action_space.sample()
+                val = np.array([
+                    np.random.uniform(-env.flywheel_max_thdot, env.flywheel_max_thdot, 1)[0]
+                ])
+                s = np.array([val]).astype(np.float32)
+
             
-            info = env.step(u)
+            info = env.step(s)
             
             time.sleep(.1)
     
@@ -56,8 +60,8 @@ def render_test(torque_type=0):
 
 def main():
 
-    theta_num = np.pi
-    theta_den = 4
+    theta_num = 0
+    theta_den = 1
     solution = QLearning(goal_theta_num=theta_num, goal_theta_den=theta_den)
 
     try:
@@ -74,5 +78,5 @@ def main():
 if __name__ == '__main__':
     main()
 
-    # torque_type = 0
+    # torque_type = 1
     # render_test(torque_type)

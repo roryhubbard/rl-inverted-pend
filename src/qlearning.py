@@ -18,21 +18,24 @@ class QLearning():
 
         self.save_directory = 'saved_policies'
 
-        self.epsilon = .4
+        self.epsilon = 0
         self.gamma = .99
 
         self.num_avail_actions = 31
+        self.num_fw_thdot = 31
         self.num_avail_positions = 51
         self.num_avail_velocities = 51
 
         self.thetas = np.linspace(-self.env.angle_limit, self.env.angle_limit, self.num_avail_positions)
         self.theta_dots = np.linspace(-self.env.max_speed, self.env.max_speed, self.num_avail_velocities)
-        self.actions = np.linspace(-self.env.max_torque, self.env.max_torque, self.num_avail_actions)
+        self.actions = np.linspace(-self.env.max_motor_speed, self.env.max_motor_speed, self.num_avail_actions)
+        self.fwdot = np.linspace(-self.env.flywheel_max_thdot, self.env.flywheel_max_thdot, self.num_fw_thdot)
 
         self.q_matrix = np.zeros((
             self.num_avail_actions,
             self.num_avail_positions,
-            self.num_avail_velocities
+            self.num_avail_velocities,
+            self.num_fw_thdot
         ))
 
         self.converge_threshold = 0.05 # % of q-value that dq must be close to to be considered converged
@@ -44,46 +47,49 @@ class QLearning():
         self.prev_q_matrix = np.zeros((
             self.num_avail_actions,
             self.num_avail_positions,
-            self.num_avail_velocities
+            self.num_avail_velocities,
+            self.num_fw_thdot
         )) # previous q-matrix
 
         self.dq_matrix = 100 * np.ones((
             self.num_avail_actions,
             self.num_avail_positions,
-            self.num_avail_velocities
+            self.num_avail_velocities,
+            self.num_fw_thdot
         )) # delta-q matrix, tracks amount each weight is being updated
     
 
-    def getQMatrixIdx(self, th, thdot, torque):
+    def getQMatrixIdx(self, th, thdot, torque, fwdot):
         thIdx = np.abs(self.thetas - th).argmin()
         thdotIdx = np.abs(self.theta_dots - thdot).argmin()
         torIdx = np.abs(self.actions - torque).argmin()
+        fwdotIdx = np.abs(self.fwdot - fwdot).argmin()
 
-        return torIdx, thIdx, thdotIdx
+        return torIdx, thIdx, thdotIdx, fwdotIdx
 
 
-    def getMaxQValue(self, th, thdot):
-        # returns the depth index for given th,thdot state where torque is highest
-        maxQValIdx = self.q_matrix[:, th, thdot].argmax()
-        maxQVal = self.q_matrix[maxQValIdx, th, thdot]
+    def getMaxQValue(self, th, thdot, fwdot):
+        # returns the depth index for given th, thdot, fwdot state where torque is highest
+        maxQValIdx = self.q_matrix[:, th, thdot, fwdot].argmax()
+        maxQVal = self.q_matrix[maxQValIdx, th, thdot, fwdot]
 
         return maxQValIdx, maxQVal
 
 
-    def get_action(self, th, thdot):
+    def get_action(self, th, thdot, fwdot):
 
         random_float = random.random()
         if (random_float < self.epsilon): # if a random float is less than our epsilon, explore a random action
             chosen_idx = np.random.randint(0, self.num_avail_actions)
 
         else: # if the random float is not less than epsilon, exploit the policy
-            _, thIdx, thdotIdx = self.getQMatrixIdx(th, thdot, 0)
-            chosen_idx, _ = self.getMaxQValue(thIdx, thdotIdx)
+            _, thIdx, thdotIdx, fwdotIdx = self.getQMatrixIdx(th, thdot, 0, fwdot)
+            chosen_idx, _ = self.getMaxQValue(thIdx, thdotIdx, fwdotIdx)
 
         action = self.actions[chosen_idx]
-        u = np.array([action]).astype(self.env.action_space.dtype)
+        s = np.array([action]).astype(np.float32)
 
-        return u
+        return s
     
 
     def check_converged(self):
@@ -108,13 +114,13 @@ class QLearning():
             return False
 
 
-    def train(self, episodes=100000, max_iterations=1000, l_rate=0.1):
+    def train(self, episodes=50000, max_iterations=100000, l_rate=0.1):
         self.start_time = time.time()
 
         for episode_num in range(episodes):
             
             # reset the environment and declare th,thdot
-            th, thdot = self.env.reset()
+            th, thdot, fwdot = self.env.reset()
 
             iter_count = -1
 
@@ -122,33 +128,34 @@ class QLearning():
                 iter_count += 1
 
                 # select a new action to take
-                u = self.get_action(th, thdot)
+                u = self.get_action(th, thdot, fwdot)
 
                 # find the current indecies in the self.weights_matrix so that we can update the weight for this action : th,thdot,u
-                currTorIdx, currThIdx, currThdotIdx = self.getQMatrixIdx(th, thdot, u)
+                currTorIdx, currThIdx, currThdotIdx, currFwdotIdx = self.getQMatrixIdx(th, thdot, u, fwdot)
 
                 # find next state corresponding to chosen action
-                nextTh, nextThdot, reward = self.env.step(u)
+                nextTh, nextThdot, nextFwdot, reward = self.env.step(u)
 
-                _, nextThIdx, nextThdotIdx = self.getQMatrixIdx(nextTh, nextThdot, u)
+                _, nextThIdx, nextThdotIdx, nextFwdotIdx = self.getQMatrixIdx(nextTh, nextThdot, nextFwdot, u)
 
                 # find the highest weighted torque in the self.weights_matrix given the nextTh,nextThdot
-                _, nextQVal = self.getMaxQValue(nextThIdx, nextThdotIdx)
+                _, nextQVal = self.getMaxQValue(nextThIdx, nextThdotIdx, nextFwdotIdx)
 
-                self.q_matrix[currTorIdx, currThIdx, currThdotIdx] += l_rate * (reward + self.gamma * nextQVal \
-                                                                    - self.q_matrix[currTorIdx, currThIdx, currThdotIdx])
+                self.q_matrix[currTorIdx, currThIdx, currThdotIdx, currFwdotIdx] += l_rate * (reward + self.gamma * nextQVal \
+                                                                    - self.q_matrix[currTorIdx, currThIdx, currThdotIdx, currFwdotIdx])
 
 
-                self.dq_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx] \
-                                                                    - self.prev_q_matrix[currTorIdx, currThIdx, currThdotIdx]
+                self.dq_matrix[currTorIdx, currThIdx, currThdotIdx, currFwdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx, currFwdotIdx] \
+                                                                    - self.prev_q_matrix[currTorIdx, currThIdx, currThdotIdx, currFwdotIdx]
 
-                self.prev_q_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx]
+                self.prev_q_matrix[currTorIdx, currThIdx, currThdotIdx, currFwdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx, currFwdotIdx]
 
                 th = nextTh
                 thdot = nextThdot
+                fwdot = nextFwdot
                     
                 if iter_count % 100 == 0:
-                    # self.env.render()
+                    self.env.render()
                     print('iter_count = ', iter_count)
                     print('episode = ', episode_num)
                     print('epsilon = ', self.epsilon)
@@ -157,12 +164,12 @@ class QLearning():
                     print("Time Elapsed: ",time.strftime("%H:%M:%S",time.gmtime(time.time()-self.start_time)))
                     print('')
                     
-            converged = self.check_converged()
-            if converged:
-                print(f'Converged on episode {episode_num}')
-                break
+            # converged = self.check_converged()
+            # if converged:
+            #     print(f'Converged on episode {episode_num}')
+            #     break
             
-            self.increase_epsilon_maybe(episode_num)
+            # self.increase_epsilon_maybe(episode_num)
         
         self.print_stuff()
 
