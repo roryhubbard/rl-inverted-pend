@@ -24,23 +24,22 @@ class PendulumEnv(gym.Env):
         self.started_right = None
         self.switched_sides = False
 
+        self.flywheel_diameter = .4
+        self.flywheel_max_thdot = 15
+        self.flywheel_I = 54461568.26 / 1e9 # flywheel inertia in kg * m^2
+        self.flywheel_prev_thdot = 0
+
         self.m_wheel = 2.43842
         motor_mass = .89
         self.m_pend = 9.54063 - self.m_wheel + motor_mass
         self.l = .68093
+        self.angle_limit = np.pi/2 - np.arccos(self.l / (np.sqrt((self.flywheel_diameter/2)**2 + (self.l)**2)))
 
-        self.flywheel_diameter = .4
-        self.flywheel_ang_vel = 0
-        self.flywheel_ang = 0
-        self.flywheel_max_ang_vel = 15
-        self.angle_limit = np.pi/2 - np.arccos(self.l/(np.sqrt((self.flywheel_diameter/2)**2 + (self.l)**2)))
+        self.state = None
+        self.pend_prev_thdot = 0
+        
         self.viewer = None
         self.rotation_add = 0
-
-        high = np.array([1., 1., self.max_speed])
-
-        self.action_space = spaces.Box(low=-self.max_torque, high=self.max_torque, shape=(1,), dtype=np.float32)
-        self.observation_space = spaces.Box(low=-high, high=high, dtype=np.float32)
 
         self.seed()
 
@@ -50,10 +49,15 @@ class PendulumEnv(gym.Env):
         return [seed]
 
 
-    def step(self,u):
+    def step(self, fwthdot):
         th, thdot = self.state # th := theta
-        dt = self.dt
 
+        fwthdot = np.clip(fwthdot, -self.flywheel_max_thdot, self.flywheel_max_thdot)
+
+        pendulum_acc = thdot - self.pend_prev_thdot
+        flywheel_acc = fwthdot - self.flywheel_prev_thdot
+
+        u = self.flywheel_I * (pendulum_acc + flywheel_acc)
         u = np.clip(u, -self.max_torque, self.max_torque)[0]
         self.last_u = u # for rendering
 
@@ -64,13 +68,15 @@ class PendulumEnv(gym.Env):
         self.state = np.array([newth, newthdot])
 
         # make the flywheel speed up if given more torque
-        newAngAcc = self.flywheel_ang_vel + (u*0.5)*dt
-        self.flywheel_ang_vel = self.flywheel_ang_vel + (u*0.005)*dt
-        self.flywheel_ang_vel = np.clip(self.flywheel_ang_vel, -self.flywheel_max_ang_vel, self.flywheel_max_ang_vel)
-        newAng = self.flywheel_ang + self.flywheel_ang_vel * dt + 0.5*newAngAcc*dt**2
-        newAngAcc = np.clip(newAngAcc,-self.flywheel_max_ang_vel, self.flywheel_max_ang_vel)
+        # newAngAcc = self.flywheel_thdot + (u*0.5)*dt
+        # self.flywheel_thdot = self.flywheel_thdot + (u*0.005)*dt
+        # self.flywheel_thdot = np.clip(self.flywheel_thdot, -self.flywheel_max_thdot, self.flywheel_max_thdot)
+        # newAng = self.flywheel_th + self.flywheel_thdot * dt + 0.5*newAngAcc*dt**2
+        # newAngAcc = np.clip(newAngAcc,-self.flywheel_max_thdot, self.flywheel_max_thdot)
+        # self.rotation_add = self.rotation_add + newAng #self.rotation_add + np.pi/10
 
-        self.rotation_add = self.rotation_add + newAng #self.rotation_add + np.pi/10
+        self.pend_prev_thdot = thdot
+        self.flywheel_prev_thdot = fwthdot
 
         self.check_if_done()
 
@@ -149,10 +155,12 @@ class PendulumEnv(gym.Env):
 
 
     def reset(self):
-        # self.state = [self.angle_limit, 0] #uncomment this and do the switcheroo in the main loop if you want the pendulum to be "frozen" -> (aayyy skrskr)
         self.state = np.array([
             np.random.uniform(-self.angle_limit, self.angle_limit, 1)[0],
             np.random.uniform(-self.max_speed, self.max_speed, 1)[0]
+        ])
+        self.flywheel_thdot = np.array([
+            np.random.uniform(-self.flywheel_max_thdot, self.flywheel_max_thdot, 1)[0]
         ])
 
         self.is_done = False
@@ -164,6 +172,7 @@ class PendulumEnv(gym.Env):
             self.started_right = True
 
         self.last_u = None
+
         return self._get_obs()
 
 

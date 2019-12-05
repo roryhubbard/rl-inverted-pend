@@ -4,14 +4,21 @@ from pendulum import PendulumEnv
 import random
 import os
 
+from math import isclose
+
 
 class QLearning():
 
-    def __init__(self, goal_theta=0):
+    def __init__(self, goal_theta_num=0, goal_theta_den=1):
+        self.goal_theta_num = goal_theta_num
+        self.goal_theta_den = goal_theta_den
+        goal_theta = goal_theta_num / goal_theta_den
+
         self.env = PendulumEnv(goal_theta=goal_theta)
+
         self.save_directory = 'saved_policies'
 
-        self.epsilon = .2
+        self.epsilon = .4
         self.gamma = .99
 
         self.num_avail_actions = 31
@@ -29,7 +36,7 @@ class QLearning():
         ))
 
         self.converge_threshold = 0.05 # % of q-value that dq must be close to to be considered converged
-        self.perc_conv_thresh = 0.8 # % of q-values that must pass the convergence threshold
+        self.perc_conv_thresh = 0.4 # % of q-values that must pass the convergence threshold
 
         self.percent_converged = 0
         self.percent_unexplored = 0
@@ -101,7 +108,7 @@ class QLearning():
             return False
 
 
-    def train(self, episodes=50000, max_iterations=50000, l_rate=0.1):
+    def train(self, episodes=100000, max_iterations=1000, l_rate=0.1):
         self.start_time = time.time()
 
         for episode_num in range(episodes):
@@ -128,8 +135,7 @@ class QLearning():
                 # find the highest weighted torque in the self.weights_matrix given the nextTh,nextThdot
                 _, nextQVal = self.getMaxQValue(nextThIdx, nextThdotIdx)
 
-                self.q_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx] \
-                                                                    + l_rate * (reward + self.gamma * nextQVal \
+                self.q_matrix[currTorIdx, currThIdx, currThdotIdx] += l_rate * (reward + self.gamma * nextQVal \
                                                                     - self.q_matrix[currTorIdx, currThIdx, currThdotIdx])
 
 
@@ -152,7 +158,6 @@ class QLearning():
                     print('')
                     
             converged = self.check_converged()
-            
             if converged:
                 print(f'Converged on episode {episode_num}')
                 break
@@ -166,7 +171,7 @@ class QLearning():
     
     def increase_epsilon_maybe(self, ep_num):
         if ep_num % 1000 == 0 and ep_num != 0:
-            self.epsilon -= .006
+            self.epsilon -= .003
 
     
     def save_policy(self):
@@ -186,7 +191,21 @@ class QLearning():
         minute = time_params.tm_min
         sec = time_params.tm_sec
 
-        fname = f'{year}_{month}_{day}_{hour}_{minute}_{sec}'
+        if isclose(self.goal_theta_num, np.pi, abs_tol=1e-7):
+            num = 'pi'
+        elif isclose(self.goal_theta_num, -np.pi, abs_tol=1e-7):
+            num = 'ip'
+        else:
+            num = self.goal_theta_num
+
+        if isclose(self.goal_theta_den, np.pi, abs_tol=1e-7):
+            den = 'pi'
+        elif isclose(self.goal_theta_den, -np.pi, abs_tol=1e-7):
+            den = 'ip'
+        else:
+            den = self.goal_theta_den
+
+        fname = f'{year}_{month}_{day}_{hour}_{minute}_{sec}_{num}_{den}'
 
         return fname
     
