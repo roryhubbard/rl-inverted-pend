@@ -8,9 +8,11 @@ import os
 
 class Simulator():
 
-    def __init__(self, policy_name=None, policy_directory=None):
+    def __init__(self, data_dictionary, policy_name=None, policy_directory=None):
 
         self.trainer = QLearning()
+        self.data = data_dictionary
+
         self.num_actions = self.trainer.num_avail_actions
         self.num_positions = self.trainer.num_avail_positions
         self.num_velocities = self.trainer.num_avail_velocities
@@ -33,6 +35,9 @@ class Simulator():
         self.thetas = np.linspace(-self.env.angle_limit, self.env.angle_limit, self.num_positions)
         self.theta_dots = np.linspace(-self.env.max_speed, self.env.max_speed, self.num_velocities)
         self.actions = np.linspace(-self.env.max_torque, self.env.max_torque, self.num_actions)
+
+        self.dummy_q = self.trainer.q_matrix
+        self.num_useful_actions = 0
 
     
     def load_policy(self):
@@ -153,27 +158,55 @@ class Simulator():
         return u
 
     
+    def save_precious_simulated_data(self):
+        self.data["simulated_episodes"] = self.num_episodes
+        self.data["simulated_iterations"] = self.num_iterations
+        self.data["avg_sim_cost"] = self.avg_cost
+        self.data["perc_useful_actions"] = self.num_useful_action
+
+
+    def update_dummy_q(self,torI,thI,thDotI):
+        if self.dummy_q[torI,thI,thDotI] != 1000:
+            self.dummy_q[torI,thI,thDotI] = 1000
+
+    
     def simulate(self):
         print(f'Running simulation using policy: {self.file}')
 
-        th, thdot = self.env.reset()
+        self.num_episodes = 500
+        self.num_iterations = 150
+        total_total_cost = 0
 
-        try:
-            for _ in range(500):
+        for i in range(self.num_episodes):
 
-                self.env.render()
 
-                u = self.get_action(th, thdot)
-                nextTh, nextThdot, _ = self.env.step(u)
+            th, thdot = self.env.reset()
 
-                th = nextTh
-                thdot = nextThdot
+            try:
+                for _ in range(self.num_iterations):
+
+                    # self.env.render()
+
+                    u = self.get_action(th, thdot)
+
+                    torIdx,thIdx,thDotIdx = self.getQMatrixIdx(th, thdot, u)
+
+                    self.update_dummy_q(torIdx,thIdx,thDotIdx)
+
+                    nextTh, nextThdot, reward = self.env.step(u)
+                    total_total_cost += reward
+
+                    th = nextTh
+                    thdot = nextThdot
                 
-                time.sleep(.05)
+                    # time.sleep(.05)
         
-        except KeyboardInterrupt:
-            pass
+            except KeyboardInterrupt:
+                pass
 
+        self.avg_cost = total_total_cost / self.num_episodes
+        self.num_useful_actions = (self.dummy_q == 1000).sum() / self.dummy_q.size
+        self.save_precious_simulated_data()
         self.env.close()
 
 

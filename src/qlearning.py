@@ -8,10 +8,10 @@ from math import isclose
 
 class QLearning():
 
-    def __init__(self, goal_theta_num=0, goal_theta_den=1):
+    def __init__(self, goal_theta_num=0, goal_theta_den=1,  t_ep = 10000, t_it = 120000):
         self.goal_theta_num = goal_theta_num
         self.goal_theta_den = goal_theta_den
-        goal_theta = goal_theta_num / goal_theta_den
+        self.goal_theta = goal_theta_num / goal_theta_den
 
         self.env = PendulumEnv(goal_theta=goal_theta)
 
@@ -51,6 +51,10 @@ class QLearning():
             self.num_avail_positions,
             self.num_avail_velocities
         )) # delta-q matrix, tracks amount each weight is being updated
+
+        self.data = dict()
+        self.start_time = 0
+        self.total_time = 0
     
 
     def getQMatrixIdx(self, th, thdot, torque):
@@ -105,6 +109,28 @@ class QLearning():
 
         else:
             return False
+
+
+    def get_convergence_stats(self):
+        # returns a dictionary where the keys are threshold values (from [0-0.95] in 0.05 step size)
+        # and the values are the percentage of the q-matrix that meets this threshold of convergence
+        conv_stats = dict()
+        total_elements = self.q_matrix.size
+        conv_threshold = 0.05
+
+        for i in range(20):
+            new_threshold = (conv_threshold * i)
+            percent_changed = np.divide(self.dq_matrix, self.q_matrix,
+                            out=np.ones(self.q_matrix.shape),
+                            where=self.q_matrix != 0)
+            # compute the number of 'converged' q-values
+            num_converged = (percent_changed < new_threshold).sum()
+            # percentage of converged q-values
+            percent_converged = num_converged / total_elements
+
+            conv_stats[new_threshold] = pecent_converged
+
+        return conv_stats
 
 
     def train(self, episodes=50000, max_iterations=50000, l_rate=0.1):
@@ -166,7 +192,9 @@ class QLearning():
             self.increase_epsilon_maybe(episode_num)
         
         self.print_stuff()
-
+        self.episodes = episode_num
+        self.iterations = max_iterations
+        self.l_rate = l_rate
         self.save_policy()
 
     
@@ -176,6 +204,7 @@ class QLearning():
 
     
     def save_policy(self):
+        self.save_precious_data()
         time_struct = time.localtime(time.time())
         fname = self.get_fname(time_struct)
         save_path = os.path.join(self.save_directory, fname)
@@ -217,3 +246,19 @@ class QLearning():
         print("Total Time Elapsed: ",time.strftime("%H:%M:%S",time.gmtime(time.time()-self.start_time)))
         print(f'percent converged = {round(self.percent_converged, 2)}')
         print(f'percent unexplored = {round(self.percent_unexplored, 2)}')
+
+
+    def save_precious_data(self):
+        self.data["gamma"] = self.gamma
+        self.data["epsilon"] = self.epsilon
+        self.data["goal_theta"] = self.goal_theta
+        self.data["perc_actions_explored"] = 1 - self.percent_unexplored
+        self.data["perc_converged"] = self.percent_converged
+        self.data["conv_perc_req"] = self.perc_conv_thresh # % of q-values that must pass the convergence threshold
+        self.data["converge_threshold"] = self.converge_threshold # % of q-value that dq must be close to to be considered converged
+        self.data["training_time"] = self.total_time
+        self.data["training_episodes"] = self.episodes
+        self.data["training_iterations"] = self.iterations
+        self.data["learning_rate"] = self.l_rate
+        self.data["policy"] = self.q_matrix
+        self.data["converged_stats"] = self.get_convergence_stats()
