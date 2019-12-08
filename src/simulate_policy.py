@@ -8,7 +8,9 @@ import os
 
 class Simulator():
 
-    def __init__(self, data_dictionary, policy_name=None, policy_directory=None):
+    def __init__(self, data_dictionary=None, policy_name=None, policy_directory=None):
+
+        self.save_directory = 'precious_data'
 
         self.trainer = QLearning()
         self.data = data_dictionary
@@ -17,20 +19,27 @@ class Simulator():
         self.num_positions = self.trainer.num_avail_positions
         self.num_velocities = self.trainer.num_avail_velocities
 
-        if policy_directory is None:
-            self.load_directory = self.trainer.save_directory
+        if data_dictionary is None:
+            if policy_directory is None:
+                self.load_directory = self.trainer.save_directory
+            else:
+                self.load_directory = policy_directory
+
+            if policy_name is None:
+                policy_name = self.grab_newest_policy()
+
+            goal_theta_num, goal_theta_den = self.get_goal_theta(policy_name)
+            goal_theta = goal_theta_num / goal_theta_den
+
+            self.file = os.path.join(self.load_directory, policy_name)
+            self.policy = self.load_policy()
+
         else:
-            self.load_directory = policy_directory
+            goal_theta = self.data['goal_theta']
+            self.policy = self.data['policy']
+            self.file = self.data['fname']
 
-        if policy_name is None:
-            policy_name = self.grab_newest_policy()
-
-        goal_theta_num, goal_theta_den = self.get_goal_theta(policy_name)
-        goal_theta = goal_theta_num / goal_theta_den
         self.env = PendulumEnv(goal_theta=goal_theta)
-
-        self.file = os.path.join(self.load_directory, policy_name)
-        self.policy = self.load_policy()
 
         self.thetas = np.linspace(-self.env.angle_limit, self.env.angle_limit, self.num_positions)
         self.theta_dots = np.linspace(-self.env.max_speed, self.env.max_speed, self.num_velocities)
@@ -162,7 +171,18 @@ class Simulator():
         self.data["simulated_episodes"] = self.num_episodes
         self.data["simulated_iterations"] = self.num_iterations
         self.data["avg_sim_cost"] = self.avg_cost
-        self.data["perc_useful_actions"] = self.num_useful_action
+        self.data["perc_useful_actions"] = self.num_useful_actions
+
+        fname = self.data['fname']
+
+        save_path = os.path.join(self.save_directory, fname)
+
+        if not os.path.exists(self.save_directory):
+            os.mkdir(self.save_directory)
+
+        np.save(save_path, self.data)
+
+        print(f'saved precious data: {fname}')
 
 
     def update_dummy_q(self,torI,thI,thDotI):
@@ -177,12 +197,13 @@ class Simulator():
         self.num_iterations = 150
         total_total_cost = 0
 
-        for i in range(self.num_episodes):
+        try:
+
+            for i in range(self.num_episodes):
 
 
-            th, thdot = self.env.reset()
+                th, thdot = self.env.reset()
 
-            try:
                 for _ in range(self.num_iterations):
 
                     # self.env.render()
@@ -201,8 +222,8 @@ class Simulator():
                 
                     # time.sleep(.05)
         
-            except KeyboardInterrupt:
-                pass
+        except KeyboardInterrupt:
+            pass
 
         self.avg_cost = total_total_cost / self.num_episodes
         self.num_useful_actions = (self.dummy_q == 1000).sum() / self.dummy_q.size

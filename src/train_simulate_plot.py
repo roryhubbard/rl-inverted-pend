@@ -4,16 +4,17 @@ from simulate_policy import Simulator
 import numpy as np
 import time
 
+
 def main():
 
     desired_th_num = 0
     desired_th_den = 1
     tr_ep = 100000 # number of training episodes
     tr_it = 2000   # number of training iterations per episode
-    solution = QLearning(goal_theta_num = desired_th_num, goal_theta_den = desired_th_den, t_ep = tr_ep, t_it = tr_it)
+    solution = QLearning(goal_theta_num = desired_th_num, goal_theta_den = desired_th_den)
 
     try:
-        solution.train()
+        solution.train(episodes=tr_ep, max_iterations=tr_it)
     
     except KeyboardInterrupt:
         solution.save_policy()
@@ -24,7 +25,11 @@ def main():
     solution.env.close()
 
     sim = Simulator(data_dictionary = data_dict)
+    sim.simulate()
 
+    #TODO
+    data_dict = sim.data
+    
 
 if __name__ == '__main__':
     main()

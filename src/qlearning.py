@@ -8,12 +8,12 @@ from math import isclose
 
 class QLearning():
 
-    def __init__(self, goal_theta_num=0, goal_theta_den=1,  t_ep = 10000, t_it = 120000):
+    def __init__(self, goal_theta_num=0, goal_theta_den=1):
         self.goal_theta_num = goal_theta_num
         self.goal_theta_den = goal_theta_den
         self.goal_theta = goal_theta_num / goal_theta_den
 
-        self.env = PendulumEnv(goal_theta=goal_theta)
+        self.env = PendulumEnv(goal_theta=self.goal_theta)
 
         self.save_directory = 'saved_policies'
 
@@ -128,15 +128,19 @@ class QLearning():
             # percentage of converged q-values
             percent_converged = num_converged / total_elements
 
-            conv_stats[new_threshold] = pecent_converged
+            conv_stats[new_threshold] = percent_converged
 
         return conv_stats
 
 
-    def train(self, episodes=50000, max_iterations=50000, l_rate=0.1):
+    def train(self, episodes=15000, max_iterations=100000, l_rate=0.1):
         self.start_time = time.time()
 
         for episode_num in range(episodes):
+
+            self.episodes = episode_num
+            self.iterations = max_iterations
+            self.l_rate = l_rate
             
             # reset the environment and declare th,thdot
             th, thdot = self.env.reset()
@@ -192,9 +196,6 @@ class QLearning():
             self.increase_epsilon_maybe(episode_num)
         
         self.print_stuff()
-        self.episodes = episode_num
-        self.iterations = max_iterations
-        self.l_rate = l_rate
         self.save_policy()
 
     
@@ -204,10 +205,12 @@ class QLearning():
 
     
     def save_policy(self):
-        self.save_precious_data()
+        self.get_precious_data()
         time_struct = time.localtime(time.time())
         fname = self.get_fname(time_struct)
+        self.data['fname'] = fname
         save_path = os.path.join(self.save_directory, fname)
+
         np.save(save_path, self.q_matrix)
 
         print(f'saved policy: {fname}')
@@ -248,7 +251,7 @@ class QLearning():
         print(f'percent unexplored = {round(self.percent_unexplored, 2)}')
 
 
-    def save_precious_data(self):
+    def get_precious_data(self):
         self.data["gamma"] = self.gamma
         self.data["epsilon"] = self.epsilon
         self.data["goal_theta"] = self.goal_theta
