@@ -3,12 +3,18 @@ import time
 from pendulum import PendulumEnv
 import random
 import os
+from math import isclose
 
 
 class QLearning():
 
-    def __init__(self, goal_theta=0):
+    def __init__(self, goal_theta_num=0, goal_theta_den=1):
+        self.goal_theta_num = goal_theta_num
+        self.goal_theta_den = goal_theta_den
+        goal_theta = goal_theta_num / goal_theta_den
+
         self.env = PendulumEnv(goal_theta=goal_theta)
+
         self.save_directory = 'saved_policies'
 
         self.epsilon = .2
@@ -186,7 +192,21 @@ class QLearning():
         minute = time_params.tm_min
         sec = time_params.tm_sec
 
-        fname = f'{year}_{month}_{day}_{hour}_{minute}_{sec}'
+        if isclose(self.goal_theta_num, np.pi, abs_tol=1e-7):
+            num = 'pi'
+        elif isclose(self.goal_theta_num, -np.pi, abs_tol=1e-7):
+            num = 'ip'
+        else:
+            num = self.goal_theta_num
+
+        if isclose(self.goal_theta_den, np.pi, abs_tol=1e-7):
+            den = 'pi'
+        elif isclose(self.goal_theta_den, -np.pi, abs_tol=1e-7):
+            den = 'ip'
+        else:
+            den = self.goal_theta_den
+
+        fname = f'{year}_{month}_{day}_{hour}_{minute}_{sec}_{num}_{den}'
 
         return fname
     
