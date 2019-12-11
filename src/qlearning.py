@@ -55,6 +55,10 @@ class QLearning():
         self.data = dict()
         self.start_time = 0
         self.total_time = 0
+
+        self.ep_rewards = []
+        self.perc_unexplored_arr = []
+        self.perc_conv_arr = []
     
 
     def getQMatrixIdx(self, th, thdot, torque):
@@ -133,7 +137,7 @@ class QLearning():
         return conv_stats
 
 
-    def train(self, episodes=15000, max_iterations=100000, l_rate=0.1):
+    def train(self, episodes=15000, max_iterations=100000, l_rate=0.1, start_pos=None, start_vel=None):
         self.start_time = time.time()
 
         for episode_num in range(episodes):
@@ -145,7 +149,21 @@ class QLearning():
             # reset the environment and declare th,thdot
             th, thdot = self.env.reset()
 
+            if start_pos is not None:
+                self.env.state[0] = start_pos
+                if start_pos >= 0:
+                    self.env.started_right = False
+                else:
+                    self.env.started_right = True
+
+                th = start_pos
+            
+            if start_vel is not None:
+                self.env.state[1] = start_vel
+                thdot = start_vel
+
             iter_count = -1
+            total_reward = 0
 
             while(not self.env.is_done and iter_count < max_iterations):
                 iter_count += 1
@@ -158,6 +176,7 @@ class QLearning():
 
                 # find next state corresponding to chosen action
                 nextTh, nextThdot, reward = self.env.step(u)
+                total_reward += reward
 
                 _, nextThIdx, nextThdotIdx = self.getQMatrixIdx(nextTh, nextThdot, u)
 
@@ -192,11 +211,16 @@ class QLearning():
             if converged:
                 print(f'Converged on episode {episode_num}')
                 break
-            
-            self.increase_epsilon_maybe(episode_num)
+
+            if episode_num == 0:
+                self.ep_rewards.append(total_reward)
+                self.perc_unexplored_arr.append(self.percent_unexplored)
+                self.perc_conv_arr.append(self.percent_converged)
+
         
         self.print_stuff()
         self.save_policy()
+        self.get_precious_data()
 
     
     def increase_epsilon_maybe(self, ep_num):
@@ -205,7 +229,6 @@ class QLearning():
 
     
     def save_policy(self):
-        self.get_precious_data()
         time_struct = time.localtime(time.time())
         fname = self.get_fname(time_struct)
         self.data['fname'] = fname
@@ -265,3 +288,6 @@ class QLearning():
         self.data["learning_rate"] = self.l_rate
         self.data["policy"] = self.q_matrix
         self.data["converged_stats"] = self.get_convergence_stats()
+        self.data["ep_rewards_arr"] = self.ep_rewards
+        self.data["perc_unexplored_arr"] = self.perc_unexplored_arr
+        self.data["perc_converged_arr"] = self.perc_conv_arr

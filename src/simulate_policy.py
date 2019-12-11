@@ -10,7 +10,7 @@ class Simulator():
 
     def __init__(self, data_dictionary=None, policy_name=None, policy_directory=None):
 
-        self.save_directory = 'precious_data'
+        self.save_directory = 'rory_data'
 
         self.trainer = QLearning()
         self.data = data_dictionary
@@ -29,17 +29,17 @@ class Simulator():
                 policy_name = self.grab_newest_policy()
 
             goal_theta_num, goal_theta_den = self.get_goal_theta(policy_name)
-            goal_theta = goal_theta_num / goal_theta_den
+            self.goal_theta = goal_theta_num / goal_theta_den
 
             self.file = os.path.join(self.load_directory, policy_name)
             self.policy = self.load_policy()
 
         else:
-            goal_theta = self.data['goal_theta']
+            self.goal_theta = self.data['goal_theta']
             self.policy = self.data['policy']
             self.file = self.data['fname']
 
-        self.env = PendulumEnv(goal_theta=goal_theta)
+        self.env = PendulumEnv(goal_theta=self.goal_theta)
 
         self.thetas = np.linspace(-self.env.angle_limit, self.env.angle_limit, self.num_positions)
         self.theta_dots = np.linspace(-self.env.max_speed, self.env.max_speed, self.num_velocities)
@@ -47,6 +47,9 @@ class Simulator():
 
         self.dummy_q = self.trainer.q_matrix
         self.num_useful_actions = 0
+
+        self.torques = []
+        self.theta_errors = []
 
     
     def load_policy(self):
@@ -172,6 +175,8 @@ class Simulator():
         self.data["simulated_iterations"] = self.num_iterations
         self.data["avg_sim_cost"] = self.avg_cost
         self.data["perc_useful_actions"] = self.num_useful_actions
+        self.data["torque_arr"] = self.torques
+        self.data["theta_error_arr"] = self.theta_errors
 
         fname = self.data['fname']
 
@@ -190,25 +195,35 @@ class Simulator():
             self.dummy_q[torI,thI,thDotI] = 1000
 
     
-    def simulate(self):
+    def simulate(self, ep_num=500, iter_num=150, start_pos=None, start_vel=None):
         print(f'Running simulation using policy: {self.file}')
 
-        self.num_episodes = 500
-        self.num_iterations = 150
+        self.num_episodes = ep_num
+        self.num_iterations = iter_num
         total_total_cost = 0
 
         try:
 
             for i in range(self.num_episodes):
 
-
                 th, thdot = self.env.reset()
+
+                if start_pos is not None:
+                    self.env.state[0] = start_pos
+                    th = start_pos
+                
+                if start_vel is not None:
+                    self.env.state[1] = start_vel
+                    thdot = start_vel
 
                 for _ in range(self.num_iterations):
 
-                    # self.env.render()
+                    self.env.render()
+
+                    self.theta_errors.append(self.goal_theta - th)
 
                     u = self.get_action(th, thdot)
+                    self.torques.append(u)
 
                     torIdx,thIdx,thDotIdx = self.getQMatrixIdx(th, thdot, u)
 
@@ -220,14 +235,17 @@ class Simulator():
                     th = nextTh
                     thdot = nextThdot
                 
-                    # time.sleep(.05)
+                    time.sleep(.05)
+
+                self.torques = []
+                self.theta_errors = []
         
         except KeyboardInterrupt:
             pass
 
         self.avg_cost = total_total_cost / self.num_episodes
         self.num_useful_actions = (self.dummy_q == 1000).sum() / self.dummy_q.size
-        self.save_precious_simulated_data()
+        
         self.env.close()
 
 

@@ -43,7 +43,7 @@ ONLY FOR THE FOLLOWING 7 POLICIES:
  - 2019_12_10_4_35_13_ip_8
  - 2019_12_10_4_35_20_pi_8
 
-d["total_reward"] (list) --> list of total reward every 100 episodes over 100,000 episode training session
+d["total_reward_arr"] (list) --> list of total reward every 100 episodes over 100,000 episode training session
 
 
 THE FOLLOWING POLICIES WERE RUN FOR 100k EPISODES AT 1k OR 2k ITERATIONS, WHERE 'epsilon' WAS CHANGED FROM 0.2 TO 0.1 AT EPISODE 50k
