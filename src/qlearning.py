@@ -137,7 +137,7 @@ class QLearning():
         return conv_stats
 
 
-    def train(self, episodes=15000, max_iterations=100000, l_rate=0.1, start_pos=None, start_vel=None):
+    def train(self, episodes=15000, max_iterations=100000, l_rate=0.1):
         self.start_time = time.time()
 
         for episode_num in range(episodes):
@@ -148,19 +148,6 @@ class QLearning():
             
             # reset the environment and declare th,thdot
             th, thdot = self.env.reset()
-
-            if start_pos is not None:
-                self.env.state[0] = start_pos
-                if start_pos >= 0:
-                    self.env.started_right = False
-                else:
-                    self.env.started_right = True
-
-                th = start_pos
-            
-            if start_vel is not None:
-                self.env.state[1] = start_vel
-                thdot = start_vel
 
             iter_count = -1
             total_reward = 0
@@ -183,15 +170,14 @@ class QLearning():
                 # find the highest weighted torque in the self.weights_matrix given the nextTh,nextThdot
                 _, nextQVal = self.getMaxQValue(nextThIdx, nextThdotIdx)
 
-                self.q_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx] \
-                                                                    + l_rate * (reward + self.gamma * nextQVal \
+                self.q_matrix[currTorIdx, currThIdx, currThdotIdx] += l_rate * (reward + self.gamma * nextQVal \
                                                                     - self.q_matrix[currTorIdx, currThIdx, currThdotIdx])
-
 
                 self.dq_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx] \
                                                                     - self.prev_q_matrix[currTorIdx, currThIdx, currThdotIdx]
 
                 self.prev_q_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx]
+
 
                 th = nextTh
                 thdot = nextThdot
@@ -212,7 +198,7 @@ class QLearning():
                 print(f'Converged on episode {episode_num}')
                 break
 
-            if episode_num == 0:
+            if episode_num % 100 == 0:
                 self.ep_rewards.append(total_reward)
                 self.perc_unexplored_arr.append(self.percent_unexplored)
                 self.perc_conv_arr.append(self.percent_converged)

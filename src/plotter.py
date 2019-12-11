@@ -29,12 +29,12 @@ class Plotter():
         return value
 
     
-    def prepare_figure(self, fig, title=None, height=1.0, tight=False):
+    def prepare_figure(self, fig, title=None, height=1.0, tight=True):
         self.fig = fig
         fig.patch.set_facecolor('xkcd:black')
         fig.suptitle(title, color='xkcd:white', y=height)
         if tight:
-            fig.tight_layout()
+            fig.set_tight_layout(True)
 
     
     def prepare_axis(self, axis, title=None, xlabel=None, ylabel=None):
@@ -124,7 +124,6 @@ def plot_convergence():
         ep_count = 5000
         ep_rewards = ep_rewards[:int(ep_count/100)]
 
-        # episodes = plotter.get_item('training_episodes') + 1
         episode_arr = np.linspace(1, ep_count, len(ep_rewards))
 
         plotter.plot(ax, episode_arr, ep_rewards, label=goal_thetas[i])
@@ -132,8 +131,66 @@ def plot_convergence():
     plotter.make_legend(ax)
     # plotter.save()
     plt.show()
+
+
+def plot_control_usage():
+    load_directory = 'rory_data'
+    save_directory = 'plots'
+    save_name = 'control_usage'
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '2019_12_11_6_31_49_0_1.npy',
+        '2019_12_11_5_31_4_0_1.npy',
+        '2019_12_11_6_4_16_0_1.npy',
+    ]
+
+    torque_weight = [
+        '.0001',
+        '.00001',
+        '.000001',
+    ]
+
+    fig, ax = plt.subplots(nrows=2)
+
+    title = 'Control Usage'
+    xlabel = 'Time (s)'
+    ylabel = 'Applied Torque (Nm)'
+
+    plotter.prepare_figure(fig, 'Comparison of Weight on Applied Torque', height=1.05)
+    plotter.prepare_axis(ax[0], title, xlabel, ylabel)
+    
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_axis(ax[1], title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        torque = np.array(plotter.get_item('torque_arr'))
+        el = len(torque)
+        torque = torque[:el]
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+        err = err[:el]
+
+        t = np.linspace(0, el*.05, len(torque))
+
+        plotter.plot(ax[0], t, torque, label=torque_weight[i])
+        plotter.plot(ax[1], t, err, label=torque_weight[i])
+        
+    plotter.make_legend(ax[0], outside=True)
+    plotter.make_legend(ax[1], outside=True)
+    # plotter.save()
+    plt.show()
     
     
 if __name__ == '__main__':
     plot_convergence()
+    plot_control_usage()
 

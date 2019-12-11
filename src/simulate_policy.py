@@ -26,18 +26,22 @@ class Simulator():
                 self.load_directory = policy_directory
 
             if policy_name is None:
-                policy_name = self.grab_newest_policy()
+                self.policy_name = self.grab_newest_policy()
+            else:
+                self.policy_name = policy_name
 
-            goal_theta_num, goal_theta_den = self.get_goal_theta(policy_name)
+            goal_theta_num, goal_theta_den = self.get_goal_theta(self.policy_name)
             self.goal_theta = goal_theta_num / goal_theta_den
 
-            self.file = os.path.join(self.load_directory, policy_name)
+            self.file = os.path.join(self.load_directory, self.policy_name)
             self.policy = self.load_policy()
+            self.data = dict()
 
         else:
             self.goal_theta = self.data['goal_theta']
             self.policy = self.data['policy']
             self.file = self.data['fname']
+            self.policy_name = self.file
 
         self.env = PendulumEnv(goal_theta=self.goal_theta)
 
@@ -178,7 +182,7 @@ class Simulator():
         self.data["torque_arr"] = self.torques
         self.data["theta_error_arr"] = self.theta_errors
 
-        fname = self.data['fname']
+        fname = self.policy_name
 
         save_path = os.path.join(self.save_directory, fname)
 
@@ -218,7 +222,7 @@ class Simulator():
 
                 for _ in range(self.num_iterations):
 
-                    self.env.render()
+                    # self.env.render()
 
                     self.theta_errors.append(self.goal_theta - th)
 
@@ -235,10 +239,11 @@ class Simulator():
                     th = nextTh
                     thdot = nextThdot
                 
-                    time.sleep(.05)
+                    # time.sleep(.05)
 
-                self.torques = []
-                self.theta_errors = []
+                if i != self.num_episodes-1:
+                    self.torques = []
+                    self.theta_errors = []
         
         except KeyboardInterrupt:
             pass
@@ -250,10 +255,13 @@ class Simulator():
 
 
 def main():
-    fname = '2019_12_5_1_29_13_pi_4.npy'
-    pol_dir = 'good_policies'
-    sim = Simulator(policy_name=fname, policy_directory=pol_dir)
-    sim.simulate()
+    dummy_env = PendulumEnv()
+    start_pos = dummy_env.angle_limit
+
+    fname = '2019_12_11_5_31_4_0_1.npy'
+    sim = Simulator()
+    sim.simulate(ep_num=2, iter_num=200, start_pos=start_pos, start_vel=0)
+    # sim.save_precious_simulated_data()
 
 
 if __name__ == '__main__':

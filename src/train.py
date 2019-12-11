@@ -14,6 +14,7 @@ def render_test(torque_type=0):
 
     env = PendulumEnv()
     env.reset()
+    print(env.angle_limit)
 
     at_rest = False
     val = 0
@@ -72,7 +73,7 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    # main()
 
-    # torque_type = 0
-    # render_test(torque_type)
+    torque_type = 0
+    render_test(torque_type)
