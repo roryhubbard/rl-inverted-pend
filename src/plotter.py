@@ -140,7 +140,7 @@ def plot_convergence():
         plotter.plot(ax, episode_arr, ep_rewards, label=goal_thetas[i])
         
     plotter.make_legend(ax)
-    plotter.save()
+    # plotter.save()
     plt.show()
 
 
@@ -471,7 +471,7 @@ def plot_learning_rate_study():
         plotter.plot(ax, episode_arr, ep_rewards, label=labels[i])
         
     plotter.make_legend(ax)
-    plotter.save()
+    # plotter.save()
     plt.show()
 
 
