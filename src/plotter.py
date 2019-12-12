@@ -78,9 +78,9 @@ class Plotter():
 
 
 def plot_convergence():
-    load_directory = 'precious_data'
-    save_directory = 'plots'
-    save_name = 'convergence'
+    load_directory = pb.Path('precious_data')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('convergence')
 
     plotter = Plotter(load_directory, save_directory, save_name)
 
@@ -133,10 +133,10 @@ def plot_convergence():
     plt.show()
 
 
-def plot_control_usage():
-    load_directory = 'rory_data'
-    save_directory = 'plots'
-    save_name = 'control_usage'
+def plot_torque_weight_study():
+    load_directory = pb.Path('rory_data') / pb.Path('control_usage_study')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('control_usage')
 
     plotter = Plotter(load_directory, save_directory, save_name)
 
@@ -188,9 +188,77 @@ def plot_control_usage():
     plotter.make_legend(ax[1], outside=True)
     # plotter.save()
     plt.show()
+
+
+def plot_epsilon_study():
+    load_directory = pb.Path('rory_data') / pb.Path('epsilon_study')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('epsilon_study')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '2019_12_12_2_14_20_0_1.npy',
+        '2019_12_12_2_20_58_0_1.npy',
+        '2019_12_12_2_24_34_0_1.npy',
+    ]
+
+    labels = [
+        '.1',
+        '.2',
+        '.3',
+    ]
+
+    fig, ax = plt.subplots(nrows=3)
+
+    title = 'Q Matrix Convergence'
+    xlabel = 'Episode Count'
+    ylabel = 'Percent Converged'
+
+    plotter.prepare_figure(fig, 'Comparison of Epsilon Values', height=1.05)
+    plotter.prepare_axis(ax[0], title, xlabel, ylabel)
+    
+    title = 'Q Matrix Exploration'
+    xlabel = 'Epsiode Count'
+    ylabel = 'Percent Explored'
+
+    plotter.prepare_axis(ax[1], title, xlabel, ylabel)
+
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_axis(ax[2], title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        conv_arr = np.array(plotter.get_item('perc_converged_arr'))
+        explor_arr = 1 - np.array(plotter.get_item('perc_unexplored_arr'))
+
+        num_episodes = np.array(plotter.get_item('training_episodes'))
+        episode_arr = np.linspace(1, num_episodes, len(conv_arr))
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+
+        t = np.linspace(0, len(err)*.05, len(err))
+
+        plotter.plot(ax[0], episode_arr, conv_arr, label=labels[i])
+        plotter.plot(ax[1], episode_arr, explor_arr, label=labels[i])
+        plotter.plot(ax[2], t, err, label=labels[i])
+        
+    plotter.make_legend(ax[0], outside=True)
+    plotter.make_legend(ax[1], outside=True)
+    plotter.make_legend(ax[2], outside=True)
+    # plotter.save()
+    plt.show()
+
     
     
 if __name__ == '__main__':
     plot_convergence()
-    plot_control_usage()
+    plot_torque_weight_study()
+    plot_epsilon_study()
 
