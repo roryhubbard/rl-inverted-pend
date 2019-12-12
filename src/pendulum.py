@@ -82,8 +82,7 @@ class PendulumEnv(gym.Env):
         # max theta cost: 1.29^2 = 1.66
         # max thetadot cost: 8^2 = 64
         # max torque cost: 50^2 = 2500
-        costs = (self.goal_theta - theta)**2 + .1*theta_dot**2 + .00001*(torque**2)
-
+        costs = (self.goal_theta - theta)**2 + .1*theta_dot**2 + .00001*(torque**2) # best
         return costs
 
 

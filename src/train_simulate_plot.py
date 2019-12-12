@@ -27,7 +27,7 @@ def main():
 
     sim = Simulator(data_dictionary = data_dict)
     try:
-        sim.simulate(ep_num=2, iter_num=200, start_pos=start_pos, start_vel=start_vel)
+        sim.simulate(ep_num=1, iter_num=200, start_pos=start_pos, start_vel=start_vel)
     except KeyboardInterrupt:
         pass
     sim.save_precious_simulated_data()

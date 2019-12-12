@@ -23,6 +23,17 @@ class Plotter():
         load_file = self.load_dir / fname
         self.data = np.load(load_file, allow_pickle=True)
 
+    
+    def get_all_files(self, search_dir=None):
+        if search_dir is None:
+            search_dir = self.load_dir
+
+        all_files = []
+        for f in search_dir.iterdir():
+            all_files.append(f)
+
+        return all_files
+
 
     def get_item(self, key):
         value = self.data.item().get(key)
@@ -104,7 +115,7 @@ def plot_convergence():
         r'$\pi$/8',
     ]
 
-    title = 'Policy Convergence'
+    title = 'Policy Convergence at a Variety of Setpoints'
     xlabel = 'Episode Count'
     ylabel = 'Episode Total Reward'
 
@@ -146,10 +157,11 @@ def plot_torque_weight_study():
         '2019_12_11_6_4_16_0_1.npy',
     ]
 
+
     torque_weight = [
-        '.0001',
-        '.00001',
-        '.000001',
+        'w = .0001',
+        'w = .00001',
+        'w = .000001',
     ]
 
     fig, ax = plt.subplots(nrows=2)
@@ -158,7 +170,7 @@ def plot_torque_weight_study():
     xlabel = 'Time (s)'
     ylabel = 'Applied Torque (Nm)'
 
-    plotter.prepare_figure(fig, 'Comparison of Weight on Applied Torque', height=1.05)
+    plotter.prepare_figure(fig, 'Analysis of Weight on Applied Torque', height=1.05)
     plotter.prepare_axis(ax[0], title, xlabel, ylabel)
     
     title = 'Pendulum Theta Error'
@@ -203,6 +215,8 @@ def plot_epsilon_study():
         '2019_12_12_2_24_34_0_1.npy',
     ]
 
+    z = r'-$\epsilon$/4'
+
     labels = [
         '.1',
         '.2',
@@ -215,7 +229,7 @@ def plot_epsilon_study():
     xlabel = 'Episode Count'
     ylabel = 'Percent Converged'
 
-    plotter.prepare_figure(fig, 'Comparison of Epsilon Values', height=1.05)
+    plotter.prepare_figure(fig, 'Analysis of Epsilon Values', height=1.05)
     plotter.prepare_axis(ax[0], title, xlabel, ylabel)
     
     title = 'Q Matrix Exploration'
@@ -255,10 +269,215 @@ def plot_epsilon_study():
     # plotter.save()
     plt.show()
 
+
+def plot_thdot_weight_study():
+    load_directory = pb.Path('rory_data') / pb.Path('thdot_study')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('thdot_weight_study')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '2019_12_12_3_1_50_0_1.npy',
+        '2019_12_12_3_3_17_0_1.npy',
+        '2019_12_12_3_6_33_0_1.npy',
+    ]
+
+    labels = [
+        '.01',
+        '.1',
+        '1',
+    ]
+
+    fig, ax = plt.subplots(nrows=2)
+
+    title = 'Control Usage'
+    xlabel = 'Time (s)'
+    ylabel = 'Applied Torque (Nm)'
+
+    plotter.prepare_figure(fig, 'Analysis of Weight on Pendulum Velocity (desired theta = 0)', height=1.05)
+    plotter.prepare_axis(ax[0], title, xlabel, ylabel)
     
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_axis(ax[1], title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        torque = np.array(plotter.get_item('torque_arr'))
+        el = len(torque)
+        torque = torque[:el]
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+        err = err[:el]
+
+        t = np.linspace(0, el*.05, len(torque))
+
+        plotter.plot(ax[0], t, torque, label=labels[i])
+        plotter.plot(ax[1], t, err, label=labels[i])
+        
+    plotter.make_legend(ax[0], outside=True)
+    plotter.make_legend(ax[1], outside=True)
+    # plotter.save()
+    plt.show()
+
+
+def plot_thdot_weight_study_pi_4():
+    load_directory = pb.Path('rory_data') / pb.Path('thdot_pi4_study')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('thdot_pi4_weight_study')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '2019_12_12_4_2_15_pi_4.npy',
+        '2019_12_12_4_16_47_pi_4.npy',
+        '2019_12_12_4_16_54_pi_4.npy',
+    ]
+
+    labels = [
+        '.01',
+        '.1',
+        '1',
+    ]
+
+    fig, ax = plt.subplots(nrows=2)
+
+    title = 'Control Usage'
+    xlabel = 'Time (s)'
+    ylabel = 'Applied Torque (Nm)'
+
+    some_var = r'$\pi$/4'
+    plotter.prepare_figure(fig, f'Analysis of Weight on Pendulum Velocity (desired theta = {some_var})', height=1.05)
+    plotter.prepare_axis(ax[0], title, xlabel, ylabel)
+    
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_axis(ax[1], title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        torque = np.array(plotter.get_item('torque_arr'))
+        el = len(torque)
+        torque = torque[:el]
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+        err = err[:el]
+
+        t = np.linspace(0, el*.05, len(torque))
+
+        plotter.plot(ax[0], t, torque, label=labels[i])
+        plotter.plot(ax[1], t, err, label=labels[i])
+        
+    plotter.make_legend(ax[0], outside=True)
+    plotter.make_legend(ax[1], outside=True)
+    # plotter.save()
+    plt.show()
+
+
+def plot_gamma_study():
+    load_directory = pb.Path('rory_data') / pb.Path('gamma_study')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('gamma_study')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '',
+        '',
+        '',
+    ]
+
+    labels = [
+        '.59',
+        '.79',
+        '.99',
+    ]
+
+    fig, ax = plt.subplots()
+
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_figure(fig, 'Comparison of Gamma Values', height=1.05)
+    plotter.prepare_axis(ax, title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+
+        t = np.linspace(0, len(err)*.05, len(err))
+
+        plotter.plot(ax, t, err, label=labels[i])
+        
+    plotter.make_legend(ax, outside=True)
+    # plotter.save()
+    plt.show()
+
+
+def plot_learning_rate_study():
+    load_directory = pb.Path('rory_data') / pb.Path('lrate_study')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('lrate_study')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '',
+        '',
+    ]
+
+    labels = [
+        '0.001',
+        '.01',
+        '.1'
+    ]
+
+    title = 'Analysis of Learning Rate on Convergence'
+    xlabel = 'Episode Count'
+    ylabel = 'Episode Total Reward'
+
+    fig, ax = plt.subplots()
+
+    plotter.prepare_figure(fig)
+    plotter.prepare_axis(ax, title, xlabel, ylabel)
+    
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        ep_rewards = np.array(plotter.get_item("ep_rewards_arr"))
+
+        episode_arr = np.linspace(1, 10000, len(ep_rewards))
+
+        plotter.plot(ax, episode_arr, ep_rewards, label=labels[i])
+        
+    plotter.make_legend(ax)
+    # plotter.save()
+    plt.show()
+
     
 if __name__ == '__main__':
-    plot_convergence()
-    plot_torque_weight_study()
-    plot_epsilon_study()
+    # plot_convergence()
+    # plot_torque_weight_study()
+    # plot_epsilon_study()
+    # plot_thdot_weight_study()
+    # plot_thdot_weight_study_pi_4()
+    # plot_gamma_study()
+    # plot_learning_rate_study()
 

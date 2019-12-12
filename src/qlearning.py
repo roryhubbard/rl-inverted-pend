@@ -178,7 +178,6 @@ class QLearning():
 
                 self.prev_q_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx]
 
-
                 th = nextTh
                 thdot = nextThdot
                     

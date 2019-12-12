@@ -222,7 +222,7 @@ class Simulator():
 
                 for _ in range(self.num_iterations):
 
-                    # self.env.render()
+                    self.env.render()
 
                     self.theta_errors.append(self.goal_theta - th)
 
@@ -239,7 +239,7 @@ class Simulator():
                     th = nextTh
                     thdot = nextThdot
                 
-                    # time.sleep(.05)
+                    time.sleep(.05)
 
                 if i != self.num_episodes-1:
                     self.torques = []
@@ -258,8 +258,8 @@ def main():
     dummy_env = PendulumEnv()
     start_pos = dummy_env.angle_limit
 
-    fname = '2019_12_11_5_31_4_0_1.npy'
-    sim = Simulator()
+    fname = '2019_12_12_6_2_38_0_1.npy'
+    sim = Simulator(policy_name=fname)
     sim.simulate(ep_num=2, iter_num=200, start_pos=start_pos, start_vel=0)
     # sim.save_precious_simulated_data()
 
