@@ -132,15 +132,15 @@ def plot_convergence():
         cum_rewards = np.array(plotter.get_item('total_reward_arr'))
         ep_rewards = cum_rewards[1:] - cum_rewards[:-1]
         
-        ep_count = 5000
+        ep_count = 10000
         ep_rewards = ep_rewards[:int(ep_count/100)]
 
-        episode_arr = np.linspace(1, ep_count, len(ep_rewards))
+        episode_arr = np.linspace(1, 5000, len(ep_rewards))
 
         plotter.plot(ax, episode_arr, ep_rewards, label=goal_thetas[i])
         
     plotter.make_legend(ax)
-    # plotter.save()
+    plotter.save()
     plt.show()
 
 
@@ -474,6 +474,62 @@ def plot_learning_rate_study():
     plotter.save()
     plt.show()
 
+
+def plot_multiple_tracking():
+    load_directory = pb.Path('rory_data') / pb.Path('multiple_setpoint_tracking')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('mult_tracking')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '2019_12_2_4_12_47_ip_4.npy',
+        '2019_12_5_1_29_13_pi_4.npy',
+        '2019_12_1_18_24_43_0_1.npy',
+    ]
+    labels = [
+        r'-$\pi$/4',
+        r'$\pi$/4',
+        '0'
+    ]
+
+    fig, ax = plt.subplots(nrows=2)
+
+    title = 'Control Usage'
+    xlabel = 'Time (s)'
+    ylabel = 'Applied Torque (Nm)'
+
+    plotter.prepare_figure(fig, 'Multiple Setpoint Tracking Capability', height=1.05)
+    plotter.prepare_axis(ax[0], title, xlabel, ylabel)
+    
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_axis(ax[1], title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        torque = np.array(plotter.get_item('torque_arr'))
+        el = len(torque)
+        torque = torque[:el]
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+        err = err[:el]
+
+        t = np.linspace(0, el*.05, len(torque))
+
+        plotter.plot(ax[0], t, torque, label=labels[i])
+        plotter.plot(ax[1], t, err, label=labels[i])
+        
+    plotter.make_legend(ax[0], outside=True)
+    plotter.make_legend(ax[1], outside=True)
+    # plotter.save()
+    plt.show()
+
     
 if __name__ == '__main__':
     # plot_convergence()
@@ -482,5 +538,6 @@ if __name__ == '__main__':
     # plot_thdot_weight_study()
     # plot_thdot_weight_study_pi_4()
     # plot_gamma_study()
-    plot_learning_rate_study()
+    # plot_learning_rate_study()
+    plot_multiple_tracking()
 

@@ -57,7 +57,7 @@ class Simulator():
 
     
     def load_policy(self):
-        policy = np.load(self.file)
+        policy = np.load(self.file, allow_pickle=True)
         return policy
 
     
@@ -201,7 +201,7 @@ class Simulator():
     
     def simulate(self, ep_num=500, iter_num=150, start_pos=None, start_vel=None):
         print(f'Running simulation using policy: {self.file}')
-
+        
         self.num_episodes = ep_num
         self.num_iterations = iter_num
         total_total_cost = 0
@@ -222,7 +222,7 @@ class Simulator():
 
                 for _ in range(self.num_iterations):
 
-                    self.env.render()
+                    # self.env.render()
 
                     self.theta_errors.append(self.goal_theta - th)
 
@@ -239,7 +239,7 @@ class Simulator():
                     th = nextTh
                     thdot = nextThdot
                 
-                    time.sleep(.05)
+                    # time.sleep(.05)
 
                 if i != self.num_episodes-1:
                     self.torques = []
@@ -256,10 +256,10 @@ class Simulator():
 
 def main():
     dummy_env = PendulumEnv()
-    start_pos = dummy_env.angle_limit
+    start_pos = -dummy_env.angle_limit
 
-    pol_dir = 'saved_policies'
-    fname = '2019_12_12_11_4_1_0_1.npy'
+    pol_dir = 'good_policies'
+    fname = '2019_12_2_4_12_47.npy'
     sim = Simulator(policy_directory=pol_dir, policy_name=fname)
     sim.simulate(ep_num=2, iter_num=200, start_pos=start_pos, start_vel=0)
     # sim.save_precious_simulated_data()
