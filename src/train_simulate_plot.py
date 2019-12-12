@@ -8,14 +8,14 @@ import time
 def main():
     desired_th_num = 0
     desired_th_den = 1
-    tr_ep = 10000 # number of training episodes
-    tr_it = 150000   # number of training iterations per episode
+    tr_ep = 5000 # number of training episodes
+    tr_it = 100000   # number of training iterations per episode
     solution = QLearning(goal_theta_num = desired_th_num, goal_theta_den = desired_th_den)
     start_pos = solution.env.angle_limit
     start_vel = 0
 
     try:
-        solution.train(episodes=tr_ep, max_iterations=tr_it)
+        solution.train(episodes=tr_ep, max_iterations=tr_it, l_rate=.1)
     
     except KeyboardInterrupt:
         solution.save_policy()

@@ -170,7 +170,8 @@ class QLearning():
                 # find the highest weighted torque in the self.weights_matrix given the nextTh,nextThdot
                 _, nextQVal = self.getMaxQValue(nextThIdx, nextThdotIdx)
 
-                self.q_matrix[currTorIdx, currThIdx, currThdotIdx] += l_rate * (reward + self.gamma * nextQVal \
+                self.q_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx] \
+                                                                    + l_rate * (reward + self.gamma * nextQVal \
                                                                     - self.q_matrix[currTorIdx, currThIdx, currThdotIdx])
 
                 self.dq_matrix[currTorIdx, currThIdx, currThdotIdx] = self.q_matrix[currTorIdx, currThIdx, currThdotIdx] \
@@ -197,7 +198,7 @@ class QLearning():
                 print(f'Converged on episode {episode_num}')
                 break
 
-            if episode_num % 100 == 0:
+            if episode_num % 10 == 0:
                 self.ep_rewards.append(total_reward)
                 self.perc_unexplored_arr.append(self.percent_unexplored)
                 self.perc_conv_arr.append(self.percent_converged)

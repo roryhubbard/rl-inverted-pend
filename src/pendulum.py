@@ -137,7 +137,8 @@ class PendulumEnv(gym.Env):
     def check_if_done(self):
         self.check_switched_sides()
         if self.switched_sides and abs(self.state[0]) == self.angle_limit:
-            self.is_done = True
+            # self.is_done = True
+            self.is_done = False # just testing something, this should be removed
         
 
     def check_switched_sides(self):

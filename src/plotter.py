@@ -147,7 +147,7 @@ def plot_convergence():
 def plot_torque_weight_study():
     load_directory = pb.Path('rory_data') / pb.Path('control_usage_study')
     save_directory = pb.Path('plots')
-    save_name = pb.Path('control_usage')
+    save_name = pb.Path('torque_weight_study')
 
     plotter = Plotter(load_directory, save_directory, save_name)
 
@@ -159,9 +159,9 @@ def plot_torque_weight_study():
 
 
     torque_weight = [
-        'w = .0001',
-        'w = .00001',
-        'w = .000001',
+        '.0001',
+        '.00001',
+        '.000001',
     ]
 
     fig, ax = plt.subplots(nrows=2)
@@ -205,7 +205,7 @@ def plot_torque_weight_study():
 def plot_epsilon_study():
     load_directory = pb.Path('rory_data') / pb.Path('epsilon_study')
     save_directory = pb.Path('plots')
-    save_name = pb.Path('epsilon_study')
+    save_name = pb.Path('epsilon_perf')
 
     plotter = Plotter(load_directory, save_directory, save_name)
 
@@ -215,12 +215,12 @@ def plot_epsilon_study():
         '2019_12_12_2_24_34_0_1.npy',
     ]
 
-    z = r'-$\epsilon$/4'
+    z = r'$\epsilon$'
 
     labels = [
-        '.1',
-        '.2',
-        '.3',
+        f'{z} = .1',
+        f'{z} = .2',
+        f'{z} = .3',
     ]
 
     fig, ax = plt.subplots(nrows=3)
@@ -229,7 +229,7 @@ def plot_epsilon_study():
     xlabel = 'Episode Count'
     ylabel = 'Percent Converged'
 
-    plotter.prepare_figure(fig, 'Analysis of Epsilon Values', height=1.05)
+    plotter.prepare_figure(fig, height=1.05)
     plotter.prepare_axis(ax[0], title, xlabel, ylabel)
     
     title = 'Q Matrix Exploration'
@@ -242,7 +242,7 @@ def plot_epsilon_study():
     xlabel = 'Time (s)'
     ylabel = 'Theta Error (rad)'
 
-    plotter.prepare_axis(ax[2], title, xlabel, ylabel)
+    plotter.prepare_axis(ax, title, xlabel, ylabel)
 
     for i in range(len(load_name)):
 
@@ -393,15 +393,16 @@ def plot_gamma_study():
     plotter = Plotter(load_directory, save_directory, save_name)
 
     load_name = [
-        '',
-        '',
-        '',
+        '2019_12_12_7_3_5_0_1.npy',
+        '2019_12_12_7_0_42_0_1.npy',
+        '2019_12_1_18_24_43_0_1.npy',
     ]
 
+    z = r'$\gamma$'
     labels = [
-        '.59',
-        '.79',
-        '.99',
+        f'{z} = .59',
+        f'{z} = .79',
+        f'{z} = .99',
     ]
 
     fig, ax = plt.subplots()
@@ -424,7 +425,7 @@ def plot_gamma_study():
 
         plotter.plot(ax, t, err, label=labels[i])
         
-    plotter.make_legend(ax, outside=True)
+    plotter.make_legend(ax)
     # plotter.save()
     plt.show()
 
@@ -437,14 +438,15 @@ def plot_learning_rate_study():
     plotter = Plotter(load_directory, save_directory, save_name)
 
     load_name = [
-        '',
-        '',
+        '2019_12_12_10_59_47_0_1.npy',
+        '2019_12_12_11_5_2_0_1.npy',
+        '2019_12_12_11_4_1_0_1.npy',
     ]
 
     labels = [
-        '0.001',
-        '.01',
-        '.1'
+        'lr = 0.01',
+        'lr = .05',
+        'lr = .1'
     ]
 
     title = 'Analysis of Learning Rate on Convergence'
@@ -463,12 +465,13 @@ def plot_learning_rate_study():
 
         ep_rewards = np.array(plotter.get_item("ep_rewards_arr"))
 
-        episode_arr = np.linspace(1, 10000, len(ep_rewards))
+        num_episodes = np.array(plotter.get_item('training_episodes'))
+        episode_arr = np.linspace(1, 5000, len(ep_rewards))
 
         plotter.plot(ax, episode_arr, ep_rewards, label=labels[i])
         
     plotter.make_legend(ax)
-    # plotter.save()
+    plotter.save()
     plt.show()
 
     
@@ -479,5 +482,5 @@ if __name__ == '__main__':
     # plot_thdot_weight_study()
     # plot_thdot_weight_study_pi_4()
     # plot_gamma_study()
-    # plot_learning_rate_study()
+    plot_learning_rate_study()
 

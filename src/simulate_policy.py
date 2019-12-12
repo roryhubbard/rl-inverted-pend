@@ -258,8 +258,9 @@ def main():
     dummy_env = PendulumEnv()
     start_pos = dummy_env.angle_limit
 
-    fname = '2019_12_12_6_2_38_0_1.npy'
-    sim = Simulator(policy_name=fname)
+    pol_dir = 'saved_policies'
+    fname = '2019_12_12_11_4_1_0_1.npy'
+    sim = Simulator(policy_directory=pol_dir, policy_name=fname)
     sim.simulate(ep_num=2, iter_num=200, start_pos=start_pos, start_vel=0)
     # sim.save_precious_simulated_data()
 
