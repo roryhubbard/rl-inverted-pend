@@ -1,2 +1,2 @@
 # RL-InvertedPendulum
-Training of a reaction wheel inverted pendulum. Environment modified from the openai gym classical control repository.
+Q Learning implementation for training a reaction wheel inverted pendulum for desired angular position tracking and stabilization. Environment modified from the openai gym classical control repository.
