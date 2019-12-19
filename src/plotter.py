@@ -530,7 +530,244 @@ def plot_multiple_tracking():
     # plotter.save()
     plt.show()
 
+
+def kenny():
+    load_directory = pb.Path('rory_data') / pb.Path('kenny') / pb.Path('first')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('kenny')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '2019_12_10_0_16_33_pi_4.npy',
+        'pi4_quad_3pg.npy',
+        'pi4_quad_4pg.npy',
+        'pi4_cubic_3pg.npy',
+        'pi4_cubic_4pg.npy',
+    ]
+    labels = [
+        'trained policy',
+        'quad interp between poly (3 pts)',
+        'quad interp between poly (4 pts)',
+        'cubic interp between poly (4 pts)',
+        'cubic interp between poly (4 pts)'
+    ]
+
+    fig, ax = plt.subplots(nrows=2)
+
+    title = 'Control Usage'
+    xlabel = 'Time (s)'
+    ylabel = 'Applied Torque (Nm)'
+
+    plotter.prepare_figure(fig, 'Trained Policy vs Interpolated Policies', height=1.05)
+    plotter.prepare_axis(ax[0], title, xlabel, ylabel)
     
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_axis(ax[1], title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        torque = np.array(plotter.get_item('torque_arr'))
+        el = len(torque)
+        torque = torque[:el]
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+        err = err[:el]
+
+        t = np.linspace(0, el*.05, len(torque))
+
+        plotter.plot(ax[0], t, torque, label=labels[i])
+        plotter.plot(ax[1], t, err, label=labels[i])
+        
+    plotter.make_legend(ax[0], outside=True)
+    plotter.make_legend(ax[1], outside=True)
+    plotter.save()
+    # plt.show()
+
+
+def kenny2():
+    load_directory = pb.Path('rory_data') / pb.Path('kenny') / pb.Path('second')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('kenny2')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '2019_12_10_0_16_33_pi_4.npy',
+        'interp0_pi3.npy',
+        'interp0_pi4.npy',
+        'interp0_pi8.npy',
+    ]
+
+    labels = [
+        'trained policy',
+        r'linear interp between $\pm\pi$/3',
+        r'linear interp between $\pm\pi$/4',
+        r'linear interp between $\pm\pi$/8'
+    ]
+
+    fig, ax = plt.subplots(nrows=2)
+
+    title = 'Control Usage'
+    xlabel = 'Time (s)'
+    ylabel = 'Applied Torque (Nm)'
+
+    plotter.prepare_figure(fig, 'Trained Policy vs Interpolated Policies', height=1.05)
+    plotter.prepare_axis(ax[0], title, xlabel, ylabel)
+    
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_axis(ax[1], title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        torque = np.array(plotter.get_item('torque_arr'))
+        el = len(torque)
+        torque = torque[:el]
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+        err = err[:el]
+
+        t = np.linspace(0, el*.05, len(torque))
+
+        plotter.plot(ax[0], t, torque, label=labels[i])
+        plotter.plot(ax[1], t, err, label=labels[i])
+        
+    plotter.make_legend(ax[0], outside=True)
+    plotter.make_legend(ax[1], outside=True)
+    # plotter.save()
+    plt.show()
+
+
+def kenny3():
+    load_directory = pb.Path('rory_data') / pb.Path('kenny') / pb.Path('third')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('kenny3')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        '2019_12_10_1_14_16_ip_4.npy',
+        'interp_4_pi03.npy',
+        'interp_4_pi83.npy',
+        'interp_4_pi3163.npy'
+    ]
+
+    labels = [
+        'trained policy',
+        r'linear interp between 0,-$\pi$/3',
+        r'linear interp between -$\pi$/8,-$\pi$/3',
+        r'linear interp between -3$\pi$/16,-$\pi$/3'
+    ]
+
+    fig, ax = plt.subplots(nrows=2)
+
+    title = 'Control Usage'
+    xlabel = 'Time (s)'
+    ylabel = 'Applied Torque (Nm)'
+
+    plotter.prepare_figure(fig, 'Trained Policy vs Interpolated Policies', height=1.05)
+    plotter.prepare_axis(ax[0], title, xlabel, ylabel)
+    
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_axis(ax[1], title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        torque = np.array(plotter.get_item('torque_arr'))
+        el = len(torque)
+        torque = torque[:el]
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+        err = err[:el]
+
+        t = np.linspace(0, el*.05, len(torque))
+
+        plotter.plot(ax[0], t, torque, label=labels[i])
+        plotter.plot(ax[1], t, err, label=labels[i])
+        
+    plotter.make_legend(ax[0], outside=True)
+    plotter.make_legend(ax[1], outside=True)
+    # plotter.save()
+    plt.show()
+
+
+def kenny4():
+    load_directory = pb.Path('rory_data') / pb.Path('kenny') / pb.Path('fourth')
+    save_directory = pb.Path('plots')
+    save_name = pb.Path('kenny4')
+
+    plotter = Plotter(load_directory, save_directory, save_name)
+
+    load_name = [
+        'interp316_pi04.npy',
+        'interp316_pi83.npy',
+        'interp316_pi84.npy',
+        '2019_12_12_3_22_43_9.42477796076938_16.npy'
+    ]
+
+    labels = [
+        r'linear interp between 0,$\pi$/4',
+        r'linear interp between $\pi$/8,$\pi$/3',
+        r'linear interp between $\pi$/8,$\pi$/4',
+        'trained policy'
+    ]
+
+    fig, ax = plt.subplots(nrows=2)
+
+    title = 'Control Usage'
+    xlabel = 'Time (s)'
+    ylabel = 'Applied Torque (Nm)'
+
+    plotter.prepare_figure(fig, 'Trained Policy vs Interpolated Policies', height=1.05)
+    plotter.prepare_axis(ax[0], title, xlabel, ylabel)
+    
+    title = 'Pendulum Theta Error'
+    xlabel = 'Time (s)'
+    ylabel = 'Theta Error (rad)'
+
+    plotter.prepare_axis(ax[1], title, xlabel, ylabel)
+
+    for i in range(len(load_name)):
+
+        fname = load_name[i]
+        plotter.load_data(fname)
+
+        torque = np.array(plotter.get_item('torque_arr'))
+        el = len(torque)
+        torque = torque[:el]
+
+        err = np.array(plotter.get_item('theta_error_arr'))
+        err = err[:el]
+
+        t = np.linspace(0, el*.05, len(torque))
+
+        plotter.plot(ax[0], t, torque, label=labels[i])
+        plotter.plot(ax[1], t, err, label=labels[i])
+        
+    plotter.make_legend(ax[0], outside=True)
+    plotter.make_legend(ax[1], outside=True)
+    plotter.save()
+    plt.show()
+
+
 if __name__ == '__main__':
     # plot_convergence()
     # plot_torque_weight_study()
@@ -539,5 +776,8 @@ if __name__ == '__main__':
     # plot_thdot_weight_study_pi_4()
     # plot_gamma_study()
     # plot_learning_rate_study()
-    plot_multiple_tracking()
-
+    # plot_multiple_tracking()
+    kenny()
+    # kenny2
+    # kenny3()
+    # kenny4()

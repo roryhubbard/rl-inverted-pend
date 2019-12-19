@@ -30,12 +30,15 @@ class Simulator():
             else:
                 self.policy_name = policy_name
 
-            goal_theta_num, goal_theta_den = self.get_goal_theta(self.policy_name)
-            self.goal_theta = goal_theta_num / goal_theta_den
+            # goal_theta_num, goal_theta_den = self.get_goal_theta(self.policy_name)
+
+            # self.goal_theta = goal_theta_num / goal_theta_den
+            self.goal_theta = np.pi / 4
 
             self.file = os.path.join(self.load_directory, self.policy_name)
             self.policy = self.load_policy()
             self.data = dict()
+            
 
         else:
             self.goal_theta = self.data['goal_theta']
@@ -58,6 +61,7 @@ class Simulator():
     
     def load_policy(self):
         policy = np.load(self.file, allow_pickle=True)
+        policy = policy.item().get('policy')
         return policy
 
     
@@ -201,7 +205,7 @@ class Simulator():
     
     def simulate(self, ep_num=500, iter_num=150, start_pos=None, start_vel=None):
         print(f'Running simulation using policy: {self.file}')
-        
+
         self.num_episodes = ep_num
         self.num_iterations = iter_num
         total_total_cost = 0
@@ -222,7 +226,7 @@ class Simulator():
 
                 for _ in range(self.num_iterations):
 
-                    # self.env.render()
+                    self.env.render()
 
                     self.theta_errors.append(self.goal_theta - th)
 
@@ -239,7 +243,7 @@ class Simulator():
                     th = nextTh
                     thdot = nextThdot
                 
-                    # time.sleep(.05)
+                    time.sleep(.05)
 
                 if i != self.num_episodes-1:
                     self.torques = []
@@ -256,13 +260,13 @@ class Simulator():
 
 def main():
     dummy_env = PendulumEnv()
-    start_pos = -dummy_env.angle_limit
+    start_pos = dummy_env.angle_limit
 
-    pol_dir = 'good_policies'
-    fname = '2019_12_2_4_12_47.npy'
+    pol_dir = 'saved_policies'
+    fname = 'interp316_pi84.npy'
     sim = Simulator(policy_directory=pol_dir, policy_name=fname)
-    sim.simulate(ep_num=2, iter_num=200, start_pos=start_pos, start_vel=0)
-    # sim.save_precious_simulated_data()
+    sim.simulate(ep_num=1, iter_num=200, start_pos=start_pos, start_vel=0)
+    sim.save_precious_simulated_data()
 
 
 if __name__ == '__main__':

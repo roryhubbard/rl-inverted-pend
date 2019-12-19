@@ -45,7 +45,7 @@ def render_test(torque_type=0):
             else:
                 u = env.action_space.sample()
             
-            info = env.step(u)
+            _ = env.step(u)
             
             time.sleep(.1)
     
@@ -66,14 +66,12 @@ def main():
     
     except KeyboardInterrupt:
         solution.save_policy()
-        print(f'percent converged = {round(solution.percent_converged, 2)}')
-        print(f'percent unexplored = {round(solution.percent_unexplored, 2)}')
     
     solution.env.close()
 
 
 if __name__ == '__main__':
-    # main()
+    main()
 
-    torque_type = 0
-    render_test(torque_type)
+    # torque_type = 0
+    # render_test(torque_type)
